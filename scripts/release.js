@@ -41,8 +41,9 @@ try {
     }
 
     // Run the build pipeline
-    // Note: We use the unique output directory to avoid ANY file locking from previous runs
-    execSync(`tsc -p electron/tsconfig.json && vite build && electron-builder --config .build-config/electron-builder.yml -c.directories.output=${buildOutputDir}`, { stdio: 'inherit' });
+    // Use npm run build:core logic manually to ensure we use local node_modules
+    const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    execSync(`${npmCmd} exec tsc -- -p electron/tsconfig.json && ${npmCmd} exec vite -- build && ${npmCmd} exec electron-builder -- --config .build-config/electron-builder.yml -c.directories.output=${buildOutputDir}`, { stdio: 'inherit' });
 
     // 4. Move Artifact to Release Folder
     const builtExe = fs.readdirSync(path.join(__dirname, '..', buildOutputDir)).find(f => f.endsWith('.exe'));

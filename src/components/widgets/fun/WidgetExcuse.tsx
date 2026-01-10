@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { AppWidget } from '../AppWidget'
+import { AppWidget } from '@/components/modules/core/dashboard/widgets/AppWidget'
 import { Quote, Copy } from 'lucide-react'
 import { cn } from '@/services/utils'
 import { useThemeStore } from '@/stores/theme-store'
