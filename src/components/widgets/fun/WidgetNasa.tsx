@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AppWidget } from '@/components/modules/core/dashboard/widgets/AppWidget'
+import { AppWidget } from '@/components/widgets/core/AppWidget'
 import { Telescope } from 'lucide-react'
 import { cn } from '@/services/utils'
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Play, Pause, SkipForward, SkipBack, Music } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Play, Pause, SkipForward, SkipBack, Music, Shuffle, Repeat } from 'lucide-react'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useThemeStore } from '@/stores/theme-store'
 import { AppWidget } from '../AppWidget'
