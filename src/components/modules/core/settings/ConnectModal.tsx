@@ -16,9 +16,7 @@ export function ConnectModal({ open, onOpenChange }: ConnectModalProps) {
   
   const [keys, setKeys] = React.useState({
     steamApiKey: integrations.steamApiKey || '',
-    steamId: integrations.steamId || '',
-    spotifyClientId: integrations.spotifyClientId || '',
-    spotifyToken: integrations.spotifyToken || ''
+    steamId: integrations.steamId || ''
   })
 
   const handleChange = (key: string, value: string) => {
@@ -50,7 +48,7 @@ export function ConnectModal({ open, onOpenChange }: ConnectModalProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           {/* Steam Section */}
-          <div className="space-y-4 p-4 rounded-xl bg-slate-950 border border-slate-800">
+          <div className="space-y-4 p-4 rounded-xl bg-slate-950 border border-slate-800 col-span-2">
              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <div className="flex items-center gap-2">
                    <Gamepad2 className="h-5 w-5 text-blue-400" />
@@ -76,37 +74,6 @@ export function ConnectModal({ open, onOpenChange }: ConnectModalProps) {
                    onChange={e => handleChange('steamId', e.target.value)}
                    className="bg-slate-900 border-slate-700 text-xs font-mono"
                    placeholder="7656..."
-                />
-             </div>
-          </div>
-
-          {/* Spotify Section */}
-          <div className="space-y-4 p-4 rounded-xl bg-slate-950 border border-slate-800">
-             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <div className="flex items-center gap-2">
-                   <Music className="h-5 w-5 text-green-400" />
-                   <span className="font-bold">Spotify</span>
-                </div>
-                <StatusDot active={!!keys.spotifyToken} />
-             </div>
-             
-             <div className="space-y-2">
-                <label className="text-xs text-slate-500 uppercase font-bold">Client ID</label>
-                <Input 
-                   value={keys.spotifyClientId}
-                   onChange={e => handleChange('spotifyClientId', e.target.value)}
-                   className="bg-slate-900 border-slate-700 text-xs font-mono"
-                   placeholder="Spotify Client ID"
-                />
-             </div>
-             <div className="space-y-2">
-                <label className="text-xs text-slate-500 uppercase font-bold">Access Token</label>
-                <Input 
-                   value={keys.spotifyToken}
-                   onChange={e => handleChange('spotifyToken', e.target.value)}
-                   type="password"
-                   className="bg-slate-900 border-slate-700 text-xs font-mono"
-                   placeholder="OAuth Token"
                 />
              </div>
           </div>

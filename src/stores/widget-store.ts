@@ -25,7 +25,7 @@ const DEFAULT_LAYOUT: WidgetConfig[] = [
   
   // Row 1
   { id: 'net-vis-1', type: 'net-vis', title: 'Network', layout: { x: 0, y: 0, w: 6, h: 4 }, visible: true },
-  { id: 'spotify-1', type: 'spotify', title: 'Spotify', layout: { x: 6, y: 0, w: 6, h: 4 }, visible: true }, // Mapped to SoundCloud now
+  { id: 'soundcloud-1', type: 'soundcloud', title: 'SoundCloud', layout: { x: 6, y: 0, w: 6, h: 4 }, visible: true },
   
   // Row 2
   { id: 'caffeine-1', type: 'caffeine', title: 'Caffeine', layout: { x: 0, y: 4, w: 3, h: 3 }, visible: true },

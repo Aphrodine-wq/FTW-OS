@@ -15,8 +15,6 @@ export function SettingsPanel() {
   const [activeSection, setActiveSection] = useState<'profile' | 'general' | 'appearance' | 'integrations' | 'data' | 'payment' | 'sms' | 'cloud'>('profile')
   const [formData, setFormData] = useState<Partial<BusinessProfile>>({})
   const [integrationData, setIntegrationData] = useState({
-    spotifyClientId: '',
-    spotifyToken: '',
     steamApiKey: '',
     steamId: ''
   })
@@ -300,29 +298,6 @@ export function SettingsPanel() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleIntegrationsSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium text-lg border-b pb-2">Spotify</h3>
-                  <div className="grid gap-2">
-                    <label className="text-sm font-medium">Client ID</label>
-                    <input 
-                      value={integrationData.spotifyClientId || ''}
-                      onChange={(e) => setIntegrationData(prev => ({ ...prev, spotifyClientId: e.target.value }))}
-                      className="w-full p-2 border rounded-md"
-                      placeholder="Spotify Client ID"
-                    />
-                  </div>
-                   <div className="grid gap-2">
-                    <label className="text-sm font-medium">Client Token (Implicit/PKCE)</label>
-                    <input 
-                      value={integrationData.spotifyToken || ''}
-                      onChange={(e) => setIntegrationData(prev => ({ ...prev, spotifyToken: e.target.value }))}
-                      className="w-full p-2 border rounded-md"
-                      type="password"
-                      placeholder="Access Token"
-                    />
-                    <p className="text-xs text-muted-foreground">Required for "Now Playing" data.</p>
-                  </div>
-                </div>
 
                 <div className="space-y-4">
                   <h3 className="font-medium text-lg border-b pb-2">GitHub (Dev HQ)</h3>

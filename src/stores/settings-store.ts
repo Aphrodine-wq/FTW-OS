@@ -12,8 +12,6 @@ interface SettingsStore {
     dateFormat: string
   }
   integrations: {
-    spotifyClientId: string
-    spotifyToken: string
     steamApiKey: string
     steamId: string
   }
@@ -37,8 +35,6 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     dateFormat: 'MM/DD/YYYY',
   },
   integrations: {
-    spotifyClientId: '',
-    spotifyToken: '',
     steamApiKey: '',
     steamId: '',
     githubToken: ''

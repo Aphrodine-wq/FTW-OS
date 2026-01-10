@@ -29,7 +29,7 @@ const WIDGET_MAP: Record<string, React.ComponentType<any>> = {
   'system-health': SystemHealth,
   'net-vis': NetVisWidget,
   'github': RealGithubWidget,
-  'spotify': RealSoundCloudWidget, // Replaced Spotify with SoundCloud
+  'soundcloud': RealSoundCloudWidget,
   'roast': WidgetRoast,
   'nasa': WidgetNasa,
   'excuse': WidgetExcuse,
@@ -94,7 +94,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
 
   const renderWidgetContent = (type: string, id: string) => {
     switch (type) {
-      case 'real-spotify': case 'spotify': return <RealSoundCloudWidget id={id} onRemove={() => removeWidget(id)} />
+      case 'soundcloud': return <RealSoundCloudWidget id={id} onRemove={() => removeWidget(id)} />
       case 'steam': return <RealSteamWidget id={id} onRemove={() => removeWidget(id)} />
       case 'net-vis': return <div className="h-full overflow-hidden"><NetVisWidget /></div>
       case 'quick-roi': return <div className="h-full overflow-hidden"><QuickROIWidget /></div>
@@ -114,7 +114,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
   }
 
   const availableWidgets = [
-    { type: 'spotify', title: 'SoundCloud' },
+    { type: 'soundcloud', title: 'SoundCloud' },
     { type: 'steam', title: 'Steam' },
     { type: 'net-vis', title: 'NetVis Monitor' },
     { type: 'quick-roi', title: 'Quick ROI' },
