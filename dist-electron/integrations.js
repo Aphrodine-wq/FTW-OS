@@ -3,6 +3,59 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupIntegrationHandlers = setupIntegrationHandlers;
 const electron_1 = require("electron");
 function setupIntegrationHandlers() {
+    // GitHub Integration
+    electron_1.ipcMain.handle('github:user', async (_, { token }) => {
+        try {
+            const res = await fetch('https://api.github.com/user', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/vnd.github.v3+json'
+                }
+            });
+            if (!res.ok)
+                throw new Error('Failed to fetch user');
+            return await res.json();
+        }
+        catch (e) {
+            console.error('GitHub User Error:', e);
+            return null;
+        }
+    });
+    electron_1.ipcMain.handle('github:repos', async (_, { token, sort = 'updated', direction = 'desc' }) => {
+        try {
+            const res = await fetch(`https://api.github.com/user/repos?sort=${sort}&direction=${direction}&per_page=100&type=all`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/vnd.github.v3+json'
+                }
+            });
+            if (!res.ok)
+                throw new Error('Failed to fetch repos');
+            return await res.json();
+        }
+        catch (e) {
+            console.error('GitHub Repos Error:', e);
+            return [];
+        }
+    });
+    electron_1.ipcMain.handle('github:repo-stats', async (_, { token, owner, repo }) => {
+        try {
+            // Fetch languages
+            const langRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const languages = await langRes.json();
+            // Fetch participation (commit activity)
+            const partRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/stats/participation`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const participation = await partRes.json();
+            return { languages, participation };
+        }
+        catch (e) {
+            return { languages: {}, participation: { all: [] } };
+        }
+    });
     // Spotify Integration
     electron_1.ipcMain.handle('spotify:now-playing', async (_, { token }) => {
         try {

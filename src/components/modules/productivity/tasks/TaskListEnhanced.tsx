@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { Task } from '@/types/invoice'
 import {
   Plus, Check, Clock, AlertCircle, Trash2, Edit2, Tag, Users,
   Filter, Search, Calendar, MessageSquare, Paperclip, ChevronDown,
-  Repeat, Flag, MoreVertical
+  Repeat, Flag, MoreVertical, LayoutList, LayoutGrid
 } from 'lucide-react'
 import { cn } from '@/services/utils'
 
@@ -33,12 +34,29 @@ export const TaskListEnhanced: React.FC<TaskListEnhancedProps> = ({
   onTaskUpdate,
   onTaskDelete
 }) => {
+  const [viewMode, setViewMode] = useState<'list' | 'board'>('board')
   const [filterStatus, setFilterStatus] = useState<string | null>(null)
   const [filterPriority, setFilterPriority] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedTask, setExpandedTask] = useState<string | null>(null)
   const [showNewTask, setShowNewTask] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState('')
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return
+
+    const { source, destination, draggableId } = result
+
+    if (source.droppableId !== destination.droppableId) {
+      const task = tasks.find(t => t.id === draggableId)
+      if (task) {
+        onTaskUpdate?.({
+          ...task,
+          status: destination.droppableId as any
+        })
+      }
+    }
+  }
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -272,6 +290,64 @@ export const TaskListEnhanced: React.FC<TaskListEnhancedProps> = ({
     )
   }
 
+  const ListView = () => (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm text-left">
+        <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-800">
+          <tr>
+            <th className="px-4 py-3">Status</th>
+            <th className="px-4 py-3">Task</th>
+            <th className="px-4 py-3">Priority</th>
+            <th className="px-4 py-3">Due Date</th>
+            <th className="px-4 py-3">Assignee</th>
+            <th className="px-4 py-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          {filteredTasks.map(task => (
+            <tr key={task.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <td className="px-4 py-3">
+                <span className={cn(
+                  "text-xs px-2 py-1 rounded-full font-medium",
+                  statusColors[task.status as keyof typeof statusColors]
+                )}>
+                  {task.status === 'in_progress' ? 'In Progress' : task.status === 'done' ? 'Done' : 'Todo'}
+                </span>
+              </td>
+              <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                {task.title}
+                {task.description && <p className="text-xs text-gray-500 truncate max-w-[200px]">{task.description}</p>}
+              </td>
+              <td className="px-4 py-3">
+                <Flag className={cn(
+                  "w-4 h-4 inline mr-1",
+                  task.priority === 'high' && "text-red-500",
+                  task.priority === 'medium' && "text-yellow-500",
+                  task.priority === 'low' && "text-blue-500"
+                )} />
+                <span className="capitalize">{task.priority}</span>
+              </td>
+              <td className="px-4 py-3">
+                {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
+              </td>
+              <td className="px-4 py-3">
+                {task.assignee || '-'}
+              </td>
+              <td className="px-4 py-3 text-right flex justify-end gap-2">
+                <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-blue-600">
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => onTaskDelete?.(task.id)} className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
       {/* Header & Stats */}
@@ -283,14 +359,36 @@ export const TaskListEnhanced: React.FC<TaskListEnhancedProps> = ({
               {stats.completed} of {stats.total} completed
             </p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowNewTask(!showNewTask)}
-            className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
-          >
-            <Plus className="w-6 h-6" />
-          </motion.button>
+          <div className="flex gap-2">
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-1 flex">
+              <button
+                onClick={() => setViewMode('board')}
+                className={cn(
+                  "p-2 rounded-md transition-colors",
+                  viewMode === 'board' ? "bg-white dark:bg-gray-700 shadow-sm" : "text-gray-500"
+                )}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  "p-2 rounded-md transition-colors",
+                  viewMode === 'list' ? "bg-white dark:bg-gray-700 shadow-sm" : "text-gray-500"
+                )}
+              >
+                <LayoutList className="w-4 h-4" />
+              </button>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowNewTask(!showNewTask)}
+              className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <Plus className="w-6 h-6" />
+            </motion.button>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -357,26 +455,52 @@ export const TaskListEnhanced: React.FC<TaskListEnhancedProps> = ({
 
       {/* Task Lists */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="space-y-6">
-          {['in_progress', 'todo', 'done'].map(status => (
-            <div key={status}>
-              <h3 className="font-semibold text-sm text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wide">
-                {status === 'in_progress' ? '🚀 In Progress' : status === 'todo' ? '📋 Todo' : '✅ Done'}
-                <span className="ml-2 text-xs text-gray-500 dark:text-gray-500">({groupedTasks[status].length})</span>
-              </h3>
-              <div className="space-y-3">
-                <AnimatePresence>
-                  {groupedTasks[status].map(task => (
-                    <TaskCard key={task.id} task={task} />
-                  ))}
-                </AnimatePresence>
-                {groupedTasks[status].length === 0 && (
-                  <p className="text-xs text-gray-400 py-4 text-center">No tasks</p>
-                )}
-              </div>
+        {viewMode === 'list' ? (
+          <ListView />
+        ) : (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex gap-6 overflow-x-auto pb-4 h-full">
+              {['todo', 'in_progress', 'done'].map(status => (
+                <Droppable key={status} droppableId={status}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={cn(
+                        "flex-1 min-w-[300px] flex flex-col gap-3 rounded-xl p-4 transition-colors",
+                        snapshot.isDraggingOver ? "bg-gray-100 dark:bg-gray-800/80" : "bg-gray-50/50 dark:bg-gray-800/30"
+                      )}
+                    >
+                      <h3 className="font-semibold text-sm text-gray-600 dark:text-gray-400 mb-1 uppercase tracking-wide flex justify-between">
+                        <span>{status === 'in_progress' ? '🚀 In Progress' : status === 'todo' ? '📋 Todo' : '✅ Done'}</span>
+                        <span className="text-xs opacity-70">({groupedTasks[status].length})</span>
+                      </h3>
+                      
+                      <div className="space-y-3 flex-1 min-h-[100px]">
+                        {groupedTasks[status].map((task: Task, index: number) => (
+                          <Draggable key={task.id} draggableId={task.id} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                style={{ ...provided.draggableProps.style }}
+                                className={snapshot.isDragging ? "opacity-50" : ""}
+                              >
+                                <TaskCard task={task} />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    </div>
+                  )}
+                </Droppable>
+              ))}
             </div>
-          ))}
-        </div>
+          </DragDropContext>
+        )}
       </div>
     </div>
   )

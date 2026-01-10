@@ -29,8 +29,13 @@ export default defineConfig({
             '@radix-ui/react-dropdown-menu',
             '@radix-ui/react-select',
             '@radix-ui/react-slider',
+            '@radix-ui/react-slot',
             '@radix-ui/react-toast',
-            'framer-motion'
+            'framer-motion',
+            'lucide-react',
+            'clsx',
+            'tailwind-merge',
+            'class-variance-authority'
           ],
           'vendor-data': [
             'zustand',
@@ -38,7 +43,7 @@ export default defineConfig({
             'date-fns',
             'lodash'
           ],
-          'vendor-charts': ['recharts', 'react-grid-layout'],
+          'vendor-charts': ['recharts', 'react-grid-layout', 'react-resizable'],
           'vendor-export': ['jspdf', 'docx', 'html2canvas', 'papaparse']
         },
         // Better file naming with hashes for caching
@@ -53,5 +58,8 @@ export default defineConfig({
   esbuild: {
     drop: ['console', 'debugger'], // Remove console logs in production
     legalComments: 'none'
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   }
 })

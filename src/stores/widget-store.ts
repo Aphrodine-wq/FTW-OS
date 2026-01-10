@@ -19,21 +19,19 @@ interface WidgetState {
 }
 
 const DEFAULT_LAYOUT: WidgetConfig[] = [
-  // Top Row
-  { id: 'w1', type: 'system-health', title: 'System Status', layout: { x: 0, y: 0, w: 3, h: 4 }, visible: true },
-  { id: 'w2', type: 'steam', title: 'Steam', layout: { x: 3, y: 0, w: 5, h: 4 }, visible: true },
-  { id: 'w3', type: 'spotify', title: 'Spotify', layout: { x: 8, y: 0, w: 4, h: 4 }, visible: true },
+  // Top Row: Critical Status
+  { id: 'w1', type: 'system-health', title: 'System Status', layout: { x: 0, y: 0, w: 4, h: 4 }, visible: true },
+  { id: 'w4', type: 'net-vis', title: 'Network', layout: { x: 4, y: 0, w: 8, h: 4 }, visible: true },
 
-  // Middle Row
-  { id: 'w4', type: 'net-vis', title: 'Network', layout: { x: 0, y: 4, w: 4, h: 4 }, visible: true },
-  { id: 'w5', type: 'crypto-matrix', title: 'Crypto', layout: { x: 4, y: 4, w: 4, h: 4 }, visible: true },
-  { id: 'w6', type: 'pomodoro', title: 'Focus', layout: { x: 8, y: 4, w: 4, h: 4 }, visible: true },
+  // Middle Row: Productivity & Tools
+  { id: 'w10', type: 'github', title: 'Github', layout: { x: 0, y: 4, w: 4, h: 4 }, visible: true },
+  { id: 'w3', type: 'spotify', title: 'Spotify', layout: { x: 4, y: 4, w: 4, h: 4 }, visible: true },
+  { id: 'w11', type: 'tasks', title: 'Tasks', layout: { x: 8, y: 4, w: 4, h: 4 }, visible: true }, // Replaced Steam with Tasks for productivity focus
 
-  // Bottom Row
-  { id: 'w7', type: 'quick-roi', title: 'ROI Calc', layout: { x: 0, y: 8, w: 3, h: 4 }, visible: true },
-  { id: 'w8', type: 'day-stream', title: 'Agenda', layout: { x: 3, y: 8, w: 3, h: 4 }, visible: true },
-  { id: 'w9', type: 'system-resources', title: 'System', layout: { x: 6, y: 8, w: 3, h: 4 }, visible: true },
-  { id: 'w10', type: 'github', title: 'Github', layout: { x: 9, y: 8, w: 3, h: 4 }, visible: true },
+  // Bottom Row: Fun & Random
+  { id: 'w12', type: 'roast', title: 'Roast', layout: { x: 0, y: 8, w: 4, h: 4 }, visible: true },
+  { id: 'w13', type: 'nasa', title: 'NASA', layout: { x: 4, y: 8, w: 4, h: 4 }, visible: true },
+  { id: 'w14', type: 'excuse', title: 'Excuse', layout: { x: 8, y: 8, w: 4, h: 4 }, visible: true },
 ]
 
 export const useWidgetStore = create<WidgetState>()(

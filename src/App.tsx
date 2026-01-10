@@ -1,25 +1,10 @@
-import React, { useState } from 'react'
-import { TextInputPanel } from '@/components/modules/finance/invoices/editor/TextInputPanel'
-import { InvoicePreview } from '@/components/modules/finance/invoices/preview/InvoicePreview'
-import { PreviewControls } from '@/components/modules/finance/invoices/preview/PreviewControls'
-import { ClientManager } from '@/components/modules/crm/clients/ClientManager'
-import { ProductManager } from '@/components/modules/finance/products/ProductManager'
-import { ExpenseManager } from '@/components/modules/finance/expenses/ExpenseManager'
-import { InvoiceHistory } from '@/components/modules/finance/invoices/history/InvoiceHistory'
-import { SettingsPanel } from '@/components/modules/core/settings/SettingsPanel'
-import { TemplateGallery } from '@/components/modules/finance/invoices/templates/TemplateGallery'
-import { TimeTracker } from '@/components/modules/productivity/tracker/TimeTracker'
-import { CompUpdateManager } from '@/components/modules/productivity/documents/CompUpdateManager'
-import { TaskList } from '@/components/modules/productivity/tasks/TaskList'
-import { AnalyticsDashboard } from '@/components/modules/core/dashboard/AnalyticsDashboard'
-import { LeadsPipeline } from '@/components/modules/crm/pipeline/LeadsPipeline'
+import React, { useState, Suspense } from 'react'
 import { TopNav } from '@/components/layout/TopNav'
 import { TitleBar } from '@/components/ui/title-bar'
 import { CommandPalette } from '@/components/layout/CommandPalette'
 import { injectSeedData } from '@/seed-data'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { TrendingUp, BarChart3, Users, CreditCard, Plug, ChevronRight, LayoutDashboard, Code, CheckSquare, FileText, PlusCircle, History, Package, Receipt, LayoutTemplate, Settings, FileBox, Target } from 'lucide-react'
-import { Dashboard } from '@/components/modules/core/dashboard/Dashboard'
+import { Loader2 } from 'lucide-react'
 import { Toaster } from '@/components/ui/toaster'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/services/utils'
@@ -30,7 +15,28 @@ import '@/styles/themes.css'
 
 import { PhotonNav } from '@/components/layout/PhotonNav'
 
-import { DocumentBuilder } from '@/components/modules/finance/DocumentBuilder'
+// Lazy Load Modules for Performance
+const Dashboard = React.lazy(() => import('@/components/modules/core/dashboard/Dashboard').then(module => ({ default: module.Dashboard })))
+const AnalyticsDashboard = React.lazy(() => import('@/components/modules/core/dashboard/AnalyticsDashboard').then(module => ({ default: module.AnalyticsDashboard })))
+const DocumentBuilder = React.lazy(() => import('@/components/modules/finance/DocumentBuilder').then(module => ({ default: module.DocumentBuilder })))
+const ExpenseManager = React.lazy(() => import('@/components/modules/finance/expenses/ExpenseManager').then(module => ({ default: module.ExpenseManager })))
+const ProductManager = React.lazy(() => import('@/components/modules/finance/products/ProductManager').then(module => ({ default: module.ProductManager })))
+const TemplateGallery = React.lazy(() => import('@/components/modules/finance/invoices/templates/TemplateGallery').then(module => ({ default: module.TemplateGallery })))
+const InvoiceHistory = React.lazy(() => import('@/components/modules/finance/invoices/history/InvoiceHistory').then(module => ({ default: module.InvoiceHistory })))
+const ClientManager = React.lazy(() => import('@/components/modules/crm/clients/ClientManager').then(module => ({ default: module.ClientManager })))
+const LeadsPipeline = React.lazy(() => import('@/components/modules/crm/pipeline/LeadsPipeline').then(module => ({ default: module.LeadsPipeline })))
+// Use Enhanced Task List
+const TaskList = React.lazy(() => import('@/components/modules/productivity/tasks/TaskListEnhanced').then(module => ({ default: module.TaskListEnhanced })))
+const CompUpdateManager = React.lazy(() => import('@/components/modules/productivity/documents/CompUpdateManager').then(module => ({ default: module.CompUpdateManager })))
+const TimeTracker = React.lazy(() => import('@/components/modules/productivity/tracker/TimeTracker').then(module => ({ default: module.TimeTracker })))
+const SettingsPanel = React.lazy(() => import('@/components/modules/core/settings/SettingsPanel').then(module => ({ default: module.SettingsPanel })))
+
+const PageLoader = () => (
+  <div className="h-full w-full flex flex-col items-center justify-center text-[var(--text-muted)]">
+    <Loader2 className="h-10 w-10 animate-spin mb-4 opacity-50" />
+    <p className="text-sm font-medium tracking-widest uppercase opacity-50">Loading Module...</p>
+  </div>
+)
 
 function App() {
   console.log('[App] Component rendering...')
@@ -83,6 +89,7 @@ function App() {
 
               // Productivity
               case 'tasks': return <TaskList />
+              case 'dev': return <DevHQ />
               case 'documents': return <CompUpdateManager />
               case 'tracker': return <TimeTracker />
               
@@ -109,7 +116,9 @@ function App() {
         <div className="max-w-[1600px] mx-auto h-full flex flex-col">
           <div className="noise-overlay" /> {/* Premium Texture */}
           <ErrorBoundary>
-            {renderContent()}
+            <Suspense fallback={<PageLoader />}>
+              {renderContent()}
+            </Suspense>
           </ErrorBoundary>
         </div>
       </main>

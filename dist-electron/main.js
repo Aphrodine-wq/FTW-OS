@@ -46,7 +46,7 @@ function createWindow() {
         height: 900,
         minWidth: 1200,
         minHeight: 700,
-        title: "InvoiceForge Pro",
+        title: "FTWOS",
         backgroundColor: '#ffffff',
         show: false,
         frame: false, // Frameless window

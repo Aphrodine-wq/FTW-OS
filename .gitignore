@@ -7,16 +7,6 @@ node_modules
 coverage
 .nyc_output
 
-# Production & Build
-dist
-dist-electron
-dist_build
-dist_final
-dist_new
-build
-out
-.build-config/legacy-build-output/
-
 # Misc
 .DS_Store
 *.pem
@@ -51,15 +41,18 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# Electron-builder
-dist_electron
-work
-
-# Large Files
-*.old
-*.asar
-*.zip
-*.7z
-
 # Problematic files
 nul
+
+# Build & Releases
+dist
+dist-electron
+dist_build
+dist_temp_*
+dist_ftwos*
+dist_release_*
+releases/
+*.exe
+*.dmg
+*.zip
+*.blockmap

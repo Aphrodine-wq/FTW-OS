@@ -33,21 +33,18 @@ export const AppWidget = React.forwardRef<HTMLDivElement, AppWidgetProps>(({
   onTouchEnd,
   ...props
 }, ref) => {
-  const [isFlipped, setIsFlipped] = useState(!isConfigured)
+  const [showConfig, setShowConfig] = useState(!isConfigured)
   const [isHovered, setIsHovered] = useState(false)
 
   return (
     <div 
       ref={ref}
       className={cn(
-        "relative group perspective-1000 transition-shadow duration-300 h-full w-full",
-        // Apply theme-aware surface styles
+        "relative group h-full w-full",
         "surface-card rounded-2xl",
         className
       )}
-      style={{ 
-        ...style,
-      }}
+      style={style}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseDown={onMouseDown}
@@ -55,15 +52,13 @@ export const AppWidget = React.forwardRef<HTMLDivElement, AppWidgetProps>(({
       onTouchEnd={onTouchEnd}
       {...props}
     >
-      <motion.div
-        className="relative w-full h-full preserve-3d transition-all duration-500"
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        style={{ transformStyle: 'preserve-3d' }}
-      >
+      <div className="relative h-full w-full">
         {/* Front Face (App View) */}
         <div 
-          className="absolute inset-0 flex flex-col overflow-hidden rounded-2xl"
-          style={{ backfaceVisibility: 'hidden' }}
+          className={cn(
+            "absolute inset-0 flex flex-col overflow-hidden rounded-2xl transition-all duration-300",
+            showConfig ? "opacity-0 pointer-events-none scale-95" : "opacity-100 scale-100"
+          )}
         >
           {/* Header */}
           <div className="drag-handle flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-hover)]/50 cursor-grab active:cursor-grabbing">
@@ -79,7 +74,7 @@ export const AppWidget = React.forwardRef<HTMLDivElement, AppWidgetProps>(({
               isHovered ? "opacity-100" : "opacity-0"
             )}>
               <button 
-                onClick={(e) => { e.stopPropagation(); setIsFlipped(true) }}
+                onClick={(e) => { e.stopPropagation(); setShowConfig(true) }}
                 className="p-1 rounded hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
                 title="Settings"
                 onMouseDown={(e) => e.stopPropagation()}
@@ -105,30 +100,41 @@ export const AppWidget = React.forwardRef<HTMLDivElement, AppWidgetProps>(({
 
         {/* Back Face (Config View) */}
         <div 
-          className="absolute inset-0 flex flex-col overflow-hidden rounded-2xl bg-[var(--bg-surface)]"
-          style={{ 
-            backfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)'
-          }}
+          className={cn(
+            "absolute inset-0 flex flex-col overflow-hidden rounded-2xl bg-[var(--bg-surface)] transition-all duration-300",
+            showConfig ? "opacity-100 scale-100 z-10" : "opacity-0 pointer-events-none scale-95"
+          )}
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-hover)]/50">
-            <span className="text-xs font-bold uppercase text-[var(--text-main)]">
-              Configure {title}
-            </span>
+          {/* Subtle Background Pattern */}
+          <div className="absolute inset-0 opacity-5 pointer-events-none" 
+               style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+
+          <div className="relative flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-hover)]/50 z-10">
+            <div className="flex items-center gap-2">
+              <Settings className="h-3.5 w-3.5 text-[var(--text-muted)]" />
+              <span className="text-xs font-bold uppercase text-[var(--text-main)] tracking-wider">
+                Configure
+              </span>
+            </div>
             <button 
-              onClick={(e) => { e.stopPropagation(); setIsFlipped(false) }}
-              className="p-1 rounded hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
+              onClick={(e) => { e.stopPropagation(); setShowConfig(false) }}
+              className="p-1 rounded hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-green-500 transition-colors"
               onMouseDown={(e) => e.stopPropagation()}
             >
               <Check className="h-4 w-4" />
             </button>
           </div>
           
-          <div className="flex-1 p-6 flex flex-col justify-center bg-[var(--bg-surface)]">
+          <div className="relative flex-1 p-6 flex flex-col justify-center z-10">
+            <div className="mb-6 flex justify-center">
+                <div className="h-12 w-12 rounded-full bg-[var(--bg-surface-hover)] flex items-center justify-center">
+                    {Icon ? <Icon className="h-6 w-6 text-[var(--text-main)] opacity-50" /> : <Settings className="h-6 w-6 text-[var(--text-main)] opacity-50" />}
+                </div>
+            </div>
             {configContent}
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 })

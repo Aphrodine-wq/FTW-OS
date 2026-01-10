@@ -244,38 +244,64 @@ export function ClientManager() {
                   </Card>
                 </div>
 
-                <Card className="flex-1">
-                  <CardHeader>
-                    <CardTitle>Invoice History</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {invoices
-                        .filter(inv => inv.clientId === selectedClient.id || inv.clientId === selectedClient.name)
-                        .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime())
-                        .map(inv => (
-                          <div key={inv.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50">
-                            <div className="flex items-center gap-3">
-                              <div className={`h-2 w-2 rounded-full ${inv.status === 'paid' ? 'bg-green-500' : 'bg-orange-500'}`} />
-                              <div>
-                                <p className="font-medium">#{inv.invoiceNumber}</p>
-                                <p className="text-xs text-muted-foreground">{format(new Date(inv.issueDate), 'MMM dd, yyyy')}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold">
-                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: inv.currency }).format(inv.total)}
-                              </p>
-                              <p className="text-xs uppercase font-medium text-muted-foreground">{inv.status}</p>
-                            </div>
-                          </div>
-                        ))}
-                        {invoices.filter(inv => inv.clientId === selectedClient.id || inv.clientId === selectedClient.name).length === 0 && (
-                          <div className="text-center py-8 text-muted-foreground">No invoices found</div>
-                        )}
+                {/* Tabs */}
+                <div className="space-y-4">
+                    <div className="flex gap-4 border-b">
+                        <button className="px-4 py-2 border-b-2 border-blue-500 font-medium text-blue-600">Invoices</button>
+                        <button className="px-4 py-2 text-muted-foreground hover:text-foreground">Projects</button>
+                        <button className="px-4 py-2 text-muted-foreground hover:text-foreground">Notes</button>
                     </div>
-                  </CardContent>
-                </Card>
+
+                    {/* Invoice List (Existing) */}
+                    <Card className="flex-1">
+                      <CardHeader>
+                        <CardTitle>Invoice History</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {invoices
+                            .filter(inv => inv.clientId === selectedClient.id || inv.clientId === selectedClient.name)
+                            .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime())
+                            .map(inv => (
+                              <div key={inv.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50">
+                                <div className="flex items-center gap-3">
+                                  <div className={`h-2 w-2 rounded-full ${inv.status === 'paid' ? 'bg-green-500' : 'bg-orange-500'}`} />
+                                  <div>
+                                    <p className="font-medium">#{inv.invoiceNumber}</p>
+                                    <p className="text-xs text-muted-foreground">{format(new Date(inv.issueDate), 'MMM dd, yyyy')}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-bold">
+                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: inv.currency }).format(inv.total)}
+                                  </p>
+                                  <p className="text-xs uppercase font-medium text-muted-foreground">{inv.status}</p>
+                                </div>
+                              </div>
+                            ))}
+                            {invoices.filter(inv => inv.clientId === selectedClient.id || inv.clientId === selectedClient.name).length === 0 && (
+                              <div className="text-center py-8 text-muted-foreground">No invoices found</div>
+                            )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Quick Notes Area */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Client Notes</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <textarea 
+                                className="w-full h-32 p-3 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                placeholder="Add private notes about this client (preferences, meeting notes, etc)..."
+                            />
+                            <div className="flex justify-end mt-2">
+                                <Button size="sm">Save Notes</Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
               </div>
             </div>
           </motion.div>

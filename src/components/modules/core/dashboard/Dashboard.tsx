@@ -23,6 +23,9 @@ import { RealGithubWidget } from './widgets/real/RealGithub'
 import { WeatherWidget, CaffeineWidget } from './widgets/Widgets'
 import { HeaderWidgets } from './HeaderWidgets'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { WidgetRoast } from '@/components/widgets/fun/WidgetRoast'
+import { WidgetNasa } from '@/components/widgets/fun/WidgetNasa'
+import { WidgetExcuse } from '@/components/widgets/fun/WidgetExcuse'
 
 interface DashboardProps {
   setActiveTab: (tab: string) => void
@@ -59,6 +62,11 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
     }))
   }), [widgets])
 
+  // Memoized Render Widget Function
+  const MemoizedWidget = React.memo(({ type, id }: { type: string, id: string }) => {
+    return <>{renderWidgetContent(type, id)}</>
+  })
+
   const onLayoutChange = (layout: any) => {
     updateLayout(layout)
   }
@@ -77,6 +85,9 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
       case 'crypto-matrix': return <div className="p-4 h-full overflow-hidden"><CryptoMatrix /></div>
       case 'weather': return <div className="p-4 h-full overflow-hidden"><WeatherWidget /></div>
       case 'caffeine': return <div className="p-4 h-full overflow-hidden"><CaffeineWidget /></div>
+      case 'roast': return <WidgetRoast id={id} onRemove={() => removeWidget(id)} />
+      case 'nasa': return <WidgetNasa id={id} onRemove={() => removeWidget(id)} />
+      case 'excuse': return <WidgetExcuse id={id} onRemove={() => removeWidget(id)} />
       default: return <div className="flex items-center justify-center h-full text-xs text-[var(--text-muted)] p-4">Widget not found: {type}</div>
     }
   }
@@ -153,7 +164,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
                     </button>
                 </div>
               )}
-              {renderWidgetContent(w.type, w.id)}
+              <MemoizedWidget type={w.type} id={w.id} />
             </div>
           ))}
         </Responsive>

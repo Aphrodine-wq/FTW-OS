@@ -90,47 +90,109 @@ export function CompUpdateManager() {
     setCurrentUpdate(prev => ({ ...prev, content: summary }))
   }
 
+  const [search, setSearch] = useState('')
+  const [filterType, setFilterType] = useState<string>('all')
+
+  const filteredUpdates = React.useMemo(() => {
+    return updates.filter(u => {
+        const matchesSearch = u.title.toLowerCase().includes(search.toLowerCase()) || 
+                              clients.find(c => c.id === u.clientId)?.name.toLowerCase().includes(search.toLowerCase())
+        const matchesType = filterType === 'all' ? true : u.type === filterType
+        return matchesSearch && matchesType
+    })
+  }, [updates, search, filterType, clients])
+
   return (
     <div className="h-full flex flex-col gap-6">
       {view === 'list' && (
         <>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">Document Generator</h2>
+              <h2 className="text-3xl font-bold tracking-tight">Documents</h2>
               <p className="text-muted-foreground">Manage Compensation Updates, Contracts, and Reports</p>
             </div>
-            <Button onClick={() => { setCurrentUpdate({ date: new Date(), type: 'compensation' }); setView('edit') }}>
-              <Plus className="mr-2 h-4 w-4" /> New Document
-            </Button>
+            <div className="flex gap-2">
+                 <Button onClick={() => { setCurrentUpdate({ date: new Date(), type: 'compensation' }); setView('edit') }} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20">
+                  <Plus className="mr-2 h-4 w-4" /> New Document
+                </Button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             <Card className="md:col-span-3">
-               <CardHeader>
-                 <CardTitle>Recent Documents</CardTitle>
+          <div className="grid grid-cols-1 gap-6">
+             <Card className="border-0 shadow-xl bg-white/50 backdrop-blur-sm dark:bg-black/40">
+               <CardHeader className="pb-4 border-b border-gray-100 dark:border-white/5">
+                 <div className="flex items-center justify-between">
+                    <CardTitle>Recent Documents</CardTitle>
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input 
+                                className="pl-9 pr-4 py-2 text-sm rounded-lg border bg-white/50 focus:ring-2 ring-blue-500/20 outline-none transition-all w-64"
+                                placeholder="Search documents..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+                        <select 
+                            className="p-2 text-sm rounded-lg border bg-white/50 outline-none"
+                            value={filterType}
+                            onChange={(e) => setFilterType(e.target.value)}
+                        >
+                            <option value="all">All Types</option>
+                            <option value="contract">Contracts</option>
+                            <option value="compensation">Compensation</option>
+                            <option value="proposal">Proposals</option>
+                        </select>
+                    </div>
+                 </div>
                </CardHeader>
-               <CardContent>
-                 <div className="space-y-4">
-                   {updates.map(update => (
-                     <div key={update.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 cursor-pointer" onClick={() => { setCurrentUpdate(update); setView('edit') }}>
-                       <div className="flex items-center gap-4">
-                         <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${update.type === 'contract' ? 'bg-purple-100 text-purple-600' : update.type === 'compensation' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
+               <CardContent className="p-0">
+                 <div className="divide-y divide-gray-100 dark:divide-white/5">
+                   <div className="grid grid-cols-12 gap-4 p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50/50 dark:bg-white/5">
+                        <div className="col-span-5">Document Name</div>
+                        <div className="col-span-3">Client</div>
+                        <div className="col-span-2">Date</div>
+                        <div className="col-span-2 text-right">Actions</div>
+                   </div>
+                   {filteredUpdates.map(update => (
+                     <div key={update.id} className="grid grid-cols-12 gap-4 items-center p-4 hover:bg-blue-50/50 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => { setCurrentUpdate(update); setView('edit') }}>
+                       <div className="col-span-5 flex items-center gap-4">
+                         <div className={`h-10 w-10 rounded-xl flex items-center justify-center shadow-sm ${
+                            update.type === 'contract' ? 'bg-purple-100 text-purple-600' : 
+                            update.type === 'compensation' ? 'bg-emerald-100 text-emerald-600' : 
+                            update.type === 'proposal' ? 'bg-orange-100 text-orange-600' :
+                            'bg-blue-100 text-blue-600'
+                         }`}>
                            {update.type === 'contract' ? <PenTool className="h-5 w-5" /> : update.type === 'compensation' ? <File className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
                          </div>
                          <div>
-                           <h4 className="font-semibold">{update.title}</h4>
-                           <p className="text-sm text-muted-foreground">
-                             {clients.find(c => c.id === update.clientId)?.name} • {format(new Date(update.date), 'MMM dd, yyyy')} • <span className="capitalize">{update.type}</span>
-                           </p>
+                           <h4 className="font-semibold text-sm group-hover:text-blue-600 transition-colors">{update.title}</h4>
+                           <span className="text-xs text-muted-foreground capitalize inline-flex items-center gap-1">
+                                {update.type}
+                           </span>
                          </div>
                        </div>
-                       <Button variant="ghost" size="icon">
-                         <Edit className="h-4 w-4" />
-                       </Button>
+                       <div className="col-span-3 text-sm font-medium text-gray-600 dark:text-gray-300">
+                            {clients.find(c => c.id === update.clientId)?.name}
+                       </div>
+                       <div className="col-span-2 text-sm text-gray-500">
+                            {format(new Date(update.date), 'MMM dd, yyyy')}
+                       </div>
+                       <div className="col-span-2 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600">
+                           <Edit className="h-4 w-4" />
+                         </Button>
+                         <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600" onClick={(e) => { e.stopPropagation(); /* Delete Logic */ }}>
+                           <Trash2 className="h-4 w-4" />
+                         </Button>
+                       </div>
                      </div>
                    ))}
-                   {updates.length === 0 && (
-                     <div className="text-center py-12 text-muted-foreground">No updates found</div>
+                   {filteredUpdates.length === 0 && (
+                     <div className="text-center py-16 text-muted-foreground bg-gray-50/30 dark:bg-white/5">
+                        <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                        <p>No documents found matching your filters</p>
+                     </div>
                    )}
                  </div>
                </CardContent>

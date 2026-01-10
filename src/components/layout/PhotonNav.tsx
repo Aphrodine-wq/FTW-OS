@@ -86,6 +86,7 @@ export function PhotonNav({ activeTab, setActiveTab, setCmdOpen }: PhotonNavProp
       bgColor: 'bg-orange-500/10',
       items: [
         { id: 'tasks', label: 'Tasks', icon: CheckSquare, desc: 'Todo' },
+        { id: 'dev', label: 'Dev HQ', icon: Code, desc: 'Codebase' },
         { id: 'documents', label: 'Documents', icon: FileText, desc: 'Updates' },
         { id: 'tracker', label: 'Time Tracker', icon: Zap, desc: 'Sessions' },
       ]
@@ -108,38 +109,43 @@ export function PhotonNav({ activeTab, setActiveTab, setCmdOpen }: PhotonNavProp
           setActiveSection(null)
         }}
         className={cn(
-          "relative backdrop-blur-3xl border shadow-2xl overflow-hidden",
+          "relative backdrop-blur-3xl border shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden",
           mode === 'glass'
-            ? "bg-black/70 border-white/15"
-            : "bg-white/95 border-black/8"
+            ? "bg-black/60 border-white/20 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
+            : "bg-white/90 border-black/10 shadow-xl"
         )}
       >
         {/* Glow effect */}
         <div className={cn(
-          "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+          "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500",
           mode === 'glass'
-            ? "bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5"
-            : "bg-gradient-to-r from-blue-500/3 via-purple-500/3 to-pink-500/3"
+            ? "bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10"
+            : "bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-pink-500/5"
         )} />
 
         {/* === COLLAPSED STATE (Elegant Capsule) === */}
         <motion.div
           animate={{ opacity: isExpanded ? 0 : 1, pointerEvents: isExpanded ? 'none' : 'auto' }}
           transition={{ duration: 0.2 }}
-          className="absolute inset-0 flex items-center justify-between px-5"
+          className="absolute inset-0 flex items-center justify-between px-6"
         >
           <div className="flex items-center gap-3">
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-blue-400 to-purple-400"
-            />
-            <div className="flex flex-col gap-0.5">
-              <span className="font-bold text-sm tracking-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                InvoiceForge
+            <div className="relative">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="absolute inset-0 rounded-full bg-cyan-400 blur-sm"
+              />
+              <motion.div
+                className="relative h-3 w-3 rounded-full bg-gradient-to-tr from-cyan-400 to-purple-500 shadow-lg"
+              />
+            </div>
+            <div className="flex flex-col gap-0 leading-none">
+              <span className="font-black text-base tracking-tighter bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                FTW
               </span>
-              <span className={cn("text-xs", mode === 'glass' ? "text-white/40" : "text-black/40")}>
-                Pro
+              <span className={cn("text-[10px] font-bold tracking-widest uppercase", mode === 'glass' ? "text-white/40" : "text-black/40")}>
+                OS v{__APP_VERSION__}
               </span>
             </div>
           </div>

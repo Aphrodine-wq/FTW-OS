@@ -79,13 +79,13 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           className="text-center"
         >
           <h1 className="text-5xl font-bold text-gray-900 tracking-tight mb-2">
-            InvoiceForge
+            FTW
             <motion.span
               animate={{ opacity: [0.6, 1, 0.6] }}
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               className="text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text"
             >
-              {' '}Pro
+              {' '}OS
             </motion.span>
           </h1>
           <motion.p

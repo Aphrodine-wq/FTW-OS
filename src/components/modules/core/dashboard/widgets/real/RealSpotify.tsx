@@ -109,13 +109,40 @@ export function RealSpotifyWidget({ id, onRemove }: RealSpotifyWidgetProps) {
       configContent={ConfigContent}
     >
       {!track ? (
-        <div className="h-full flex flex-col items-center justify-center text-center space-y-3">
-          <div className={cn("p-3 rounded-full", mode === 'glass' ? "bg-white/10" : "bg-gray-100")}>
-            <Music className={cn("h-6 w-6", mode === 'glass' ? "text-white/50" : "text-gray-400")} />
+        <div className="h-full flex flex-col relative group cursor-pointer overflow-hidden" onClick={() => document.getElementById('settings-trigger')?.click()}>
+           {/* Mock / Demo Mode */}
+           <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
+              <span className="bg-[#1DB954] text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">Connect Spotify</span>
+           </div>
+
+           <div className="flex flex-col h-full gap-3 p-1 opacity-70 group-hover:opacity-40 transition-all duration-300 scale-100 group-hover:scale-95 origin-center">
+             <div className="flex gap-4 items-center">
+                <div className="h-16 w-16 rounded-md bg-gradient-to-br from-green-400 to-green-900 shadow-lg flex items-center justify-center shrink-0">
+                    <Music className="h-8 w-8 text-white animate-pulse" />
+                </div>
+                <div className="flex flex-col justify-center min-w-0">
+                <h3 className={cn("font-bold truncate text-sm", mode === 'glass' ? "text-white" : "text-gray-900")}>Lo-Fi Beats to Code To</h3>
+                <p className={cn("text-xs opacity-70 truncate", mode === 'glass' ? "text-white" : "text-gray-500")}>Spotify Demo Radio</p>
+                <div className="mt-2 w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                    <motion.div 
+                        className="h-full bg-[#1DB954]"
+                        animate={{ width: ["0%", "100%"] }}
+                        transition={{ duration: 120, ease: "linear", repeat: Infinity }}
+                    />
+                </div>
+                </div>
+             </div>
+          
+            <div className="flex justify-between items-center px-2 mt-auto">
+                <Shuffle className="h-3 w-3 opacity-50" />
+                <div className="flex gap-4">
+                <SkipBack className="h-4 w-4 fill-current opacity-70" />
+                <Pause className="h-4 w-4 fill-current" />
+                <SkipForward className="h-4 w-4 fill-current opacity-70" />
+                </div>
+                <Repeat className="h-3 w-3 opacity-50" />
+            </div>
           </div>
-          <p className={cn("text-sm font-medium", mode === 'glass' ? "text-white/70" : "text-gray-500")}>
-            Not Playing
-          </p>
         </div>
       ) : (
         <div className="h-full flex flex-col justify-between">

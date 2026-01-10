@@ -72,7 +72,7 @@ export function TopNav({ activeTab, setActiveTab }: TopNavProps) {
           <div className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors bg-[var(--accent-primary)] text-[var(--bg-app)]">
             <Zap className="h-5 w-5" />
           </div>
-          <span>FairTrade<span className="text-[var(--text-muted)]">Worker</span></span>
+          <span>FTW<span className="text-[var(--text-muted)]">OS</span></span>
         </div>
 
         {/* Navigation */}

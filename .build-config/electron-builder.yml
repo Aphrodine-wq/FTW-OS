@@ -1,7 +1,7 @@
-appId: com.invoiceforge.pro
-productName: InvoiceForge Pro
+appId: com.ftwos.app
+productName: FTWOS
 directories:
-  output: dist_final
+  output: dist_ftwos
   buildResources: resources
 files:
   - dist-electron/**/*
@@ -33,7 +33,7 @@ nsis:
   perMachine: false
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: InvoiceForge Pro
+  shortcutName: FTWOS
   deleteAppDataOnUninstall: false
   allowElevation: true
   runAfterFinish: false

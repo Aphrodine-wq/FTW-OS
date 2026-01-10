@@ -40,7 +40,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     spotifyClientId: '',
     spotifyToken: '',
     steamApiKey: '',
-    steamId: ''
+    steamId: '',
+    githubToken: ''
   },
 
   setBusinessProfile: (profile) => set({ businessProfile: profile }),

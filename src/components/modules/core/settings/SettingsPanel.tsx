@@ -197,23 +197,38 @@ export function SettingsPanel() {
                
                <div className="space-y-4">
                  <label className="text-sm font-medium block">Theme Mode</label>
+                 
                  <div className="grid grid-cols-2 gap-4">
-                    <div 
-                      onClick={() => themeStore.setTheme({ mode: 'monochrome', activeTheme: 'monochrome' })}
-                      className={cn(
-                        "cursor-pointer p-4 rounded-lg border-2 flex flex-col items-center gap-2 transition-all",
-                        themeStore.mode === 'monochrome' ? "border-black bg-gray-50" : "border-gray-200 hover:border-gray-300"
-                      )}
-                    >
-                      <Monitor className="h-6 w-6" />
-                      <span className="font-bold">Monochrome</span>
-                      <span className="text-xs text-gray-500 text-center">Clean, high-contrast, professional.</span>
-                    </div>
-                 </div>
+                     {[
+                        { id: 'monochrome', name: 'Monochrome', desc: 'Clean, professional', color: 'bg-gray-100 border-gray-300' },
+                        { id: 'glass', name: 'Glass OS', desc: 'Translucent, modern', color: 'bg-blue-500/20 border-blue-500/50 backdrop-blur-md' },
+                        { id: 'midnight', name: 'Midnight', desc: 'Deep OLED dark', color: 'bg-[#050510] border-purple-900/50 text-purple-100' },
+                        { id: 'cyberpunk', name: 'Cyberpunk', desc: 'Neon high contrast', color: 'bg-black border-yellow-400 border-2 text-yellow-400' },
+                        { id: 'retro', name: 'Retro Term', desc: 'Green phosphor', color: 'bg-black border-green-500/50 font-mono text-green-500' }
+                     ].map(theme => (
+                        <div 
+                           key={theme.id}
+                           onClick={() => themeStore.setTheme({ mode: theme.id as any })}
+                           className={cn(
+                             "cursor-pointer rounded-xl border p-4 transition-all hover:scale-[1.02]",
+                             themeStore.mode === theme.id ? "ring-2 ring-blue-500 shadow-lg" : "hover:shadow-md",
+                             theme.color
+                           )}
+                        >
+                           <div className="flex justify-between items-start">
+                              <span className="font-bold text-sm">{theme.name}</span>
+                              {themeStore.mode === theme.id && <div className="h-2 w-2 rounded-full bg-blue-500" />}
+                           </div>
+                           <p className="text-xs opacity-70 mt-1">{theme.desc}</p>
+                        </div>
+                     ))}
+                  </div>
                </div>
 
                {themeStore.mode === 'glass' && (
-                 <div className="space-y-6 animate-in fade-in slide-in-from-top-4">
+                 <div className="space-y-6 animate-in fade-in slide-in-from-top-4 p-4 rounded-lg border bg-blue-500/5">
+                   <h4 className="text-sm font-bold text-blue-500 uppercase tracking-wider">Glass Configuration</h4>
+                   
                    <div className="space-y-4">
                      <div className="flex justify-between">
                         <label className="text-sm font-medium">Blur Strength ({themeStore.blur}px)</label>
@@ -242,14 +257,14 @@ export function SettingsPanel() {
 
                    <div className="space-y-4">
                        <label className="text-sm font-medium block">Background Style</label>
-                       <div className="grid grid-cols-2 gap-4">
+                       <div className="grid grid-cols-4 gap-2">
                            {(['mesh', 'aurora', 'deep', 'cyber'] as const).map((bg) => (
                                <div 
                                 key={bg}
                                 onClick={() => themeStore.setTheme({ background: bg })}
                                 className={cn(
-                                    "cursor-pointer h-24 rounded-lg border-2 flex items-center justify-center capitalize transition-all",
-                                    themeStore.background === bg ? "border-cyan-500 bg-cyan-500/10" : "border-gray-200 hover:border-gray-300"
+                                    "cursor-pointer h-16 rounded-lg border-2 flex items-center justify-center capitalize transition-all text-xs font-medium",
+                                    themeStore.background === bg ? "border-cyan-500 bg-cyan-500/10 text-cyan-600" : "border-gray-200 hover:border-gray-300"
                                 )}
                                >
                                    {bg}
@@ -260,9 +275,9 @@ export function SettingsPanel() {
                  </div>
                )}
                
-               <div className="space-y-4">
+               <div className="space-y-4 pt-4 border-t">
                  <div className="flex justify-between">
-                    <label className="text-sm font-medium">Border Radius ({themeStore.radius}px)</label>
+                    <label className="text-sm font-medium">Global Scale / Radius ({themeStore.radius}px)</label>
                  </div>
                  <Slider 
                     value={[themeStore.radius]} 
@@ -306,6 +321,21 @@ export function SettingsPanel() {
                       placeholder="Access Token"
                     />
                     <p className="text-xs text-muted-foreground">Required for "Now Playing" data.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-medium text-lg border-b pb-2">GitHub (Dev HQ)</h3>
+                   <div className="grid gap-2">
+                    <label className="text-sm font-medium">Personal Access Token (Classic)</label>
+                    <input 
+                      value={integrationData.githubToken || ''}
+                      onChange={(e) => setIntegrationData(prev => ({ ...prev, githubToken: e.target.value }))}
+                      className="w-full p-2 border rounded-md"
+                      type="password"
+                      placeholder="ghp_XXXXXXXXXXXXXXXXXXXX"
+                    />
+                    <p className="text-xs text-muted-foreground">Required scopes: <code>repo</code>, <code>user</code>, <code>read:org</code></p>
                   </div>
                 </div>
 
