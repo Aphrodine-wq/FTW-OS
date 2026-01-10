@@ -19,19 +19,21 @@ interface WidgetState {
 }
 
 const DEFAULT_LAYOUT: WidgetConfig[] = [
-  // Top Row: Critical Status
-  { id: 'w1', type: 'system-health', title: 'System Status', layout: { x: 0, y: 0, w: 4, h: 4 }, visible: true },
-  { id: 'w4', type: 'net-vis', title: 'Network', layout: { x: 4, y: 0, w: 8, h: 4 }, visible: true },
-
-  // Middle Row: Productivity & Tools
-  { id: 'w10', type: 'github', title: 'Github', layout: { x: 0, y: 4, w: 4, h: 4 }, visible: true },
-  { id: 'w3', type: 'spotify', title: 'Spotify', layout: { x: 4, y: 4, w: 4, h: 4 }, visible: true },
-  { id: 'w11', type: 'tasks', title: 'Tasks', layout: { x: 8, y: 4, w: 4, h: 4 }, visible: true }, // Replaced Steam with Tasks for productivity focus
-
-  // Bottom Row: Fun & Random
-  { id: 'w12', type: 'roast', title: 'Roast', layout: { x: 0, y: 8, w: 4, h: 4 }, visible: true },
-  { id: 'w13', type: 'nasa', title: 'NASA', layout: { x: 4, y: 8, w: 4, h: 4 }, visible: true },
-  { id: 'w14', type: 'excuse', title: 'Excuse', layout: { x: 8, y: 8, w: 4, h: 4 }, visible: true },
+  // Top Row: Clock & Quote (HeaderWidgets handles this mostly, but we can put widgets here)
+  // Actually, user wants "Clock, Quote, NetVis, Spotify(SoundCloud), Caffeine" on boot.
+  // Assuming HeaderWidgets is separate, we'll configure the main grid.
+  
+  // Row 1
+  { id: 'net-vis-1', type: 'net-vis', title: 'Network', layout: { x: 0, y: 0, w: 6, h: 4 }, visible: true },
+  { id: 'spotify-1', type: 'spotify', title: 'Spotify', layout: { x: 6, y: 0, w: 6, h: 4 }, visible: true }, // Mapped to SoundCloud now
+  
+  // Row 2
+  { id: 'caffeine-1', type: 'caffeine', title: 'Caffeine', layout: { x: 0, y: 4, w: 3, h: 3 }, visible: true },
+  { id: 'ollama-1', type: 'ollama', title: 'Ollama', layout: { x: 3, y: 4, w: 5, h: 6 }, visible: true }, // Chatbot
+  { id: 'github-1', type: 'github', title: 'Github', layout: { x: 8, y: 4, w: 4, h: 3 }, visible: true },
+  
+  // Row 3
+  { id: 'system-health-1', type: 'system-health', title: 'System Status', layout: { x: 0, y: 7, w: 3, h: 3 }, visible: true },
 ]
 
 export const useWidgetStore = create<WidgetState>()(

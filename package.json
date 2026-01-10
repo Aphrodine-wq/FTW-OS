@@ -1,6 +1,6 @@
 {
   "name": "ftwos",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Full System for Dev Companies",
   "main": "dist-electron/main.js",
   "scripts": {

@@ -13,7 +13,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { SystemHealth } from '@/components/widgets/core/sector-b/SystemHealth'
 import { CryptoMatrix } from '@/components/widgets/core/sector-c/CryptoMatrix'
 import { PomodoroMax } from '@/components/widgets/core/sector-d/PomodoroMax'
-import { RealSpotifyWidget } from '@/components/widgets/core/real/RealSpotify'
+import { RealSoundCloudWidget } from '@/components/widgets/core/real/RealSoundCloud'
+import { OllamaChat } from '@/components/widgets/core/real/OllamaChat'
 import { NetVisWidget } from '@/components/widgets/core/sector-a/NetVisWidget'
 import { QuickROIWidget } from '@/components/widgets/core/sector-a/QuickROIWidget'
 import { DayStreamWidget } from '@/components/widgets/core/sector-a/DayStreamWidget'
@@ -22,6 +23,26 @@ import { RealSteamWidget } from '@/components/widgets/core/real/RealSteam'
 import { RealGithubWidget } from '@/components/widgets/core/real/RealGithub'
 import { WeatherWidget, CaffeineWidget } from '@/components/widgets/core/Widgets'
 import { HeaderWidgets } from './HeaderWidgets'
+
+// Widget Map for dynamic rendering
+const WIDGET_MAP: Record<string, React.ComponentType<any>> = {
+  'system-health': SystemHealth,
+  'net-vis': NetVisWidget,
+  'github': RealGithubWidget,
+  'spotify': RealSoundCloudWidget, // Replaced Spotify with SoundCloud
+  'roast': WidgetRoast,
+  'nasa': WidgetNasa,
+  'excuse': WidgetExcuse,
+  'crypto': CryptoMatrix,
+  'pomodoro': PomodoroMax,
+  'roi': QuickROIWidget,
+  'stream': DayStreamWidget,
+  'resources': SystemResourcesWidget,
+  'steam': RealSteamWidget,
+  'weather': WeatherWidget,
+  'caffeine': CaffeineWidget,
+  'ollama': OllamaChat, // Added Ollama
+}
 import { StatusBar } from '@/components/layout/StatusBar'
 import { WidgetRoast } from '@/components/widgets/fun/WidgetRoast'
 import { WidgetNasa } from '@/components/widgets/fun/WidgetNasa'
@@ -73,7 +94,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
 
   const renderWidgetContent = (type: string, id: string) => {
     switch (type) {
-      case 'real-spotify': case 'spotify': return <RealSpotifyWidget id={id} onRemove={() => removeWidget(id)} />
+      case 'real-spotify': case 'spotify': return <RealSoundCloudWidget id={id} onRemove={() => removeWidget(id)} />
       case 'steam': return <RealSteamWidget id={id} onRemove={() => removeWidget(id)} />
       case 'net-vis': return <div className="h-full overflow-hidden"><NetVisWidget /></div>
       case 'quick-roi': return <div className="h-full overflow-hidden"><QuickROIWidget /></div>
@@ -93,7 +114,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
   }
 
   const availableWidgets = [
-    { type: 'real-spotify', title: 'Spotify' },
+    { type: 'spotify', title: 'SoundCloud' },
     { type: 'steam', title: 'Steam' },
     { type: 'net-vis', title: 'NetVis Monitor' },
     { type: 'quick-roi', title: 'Quick ROI' },
@@ -146,6 +167,7 @@ export function Dashboard({ setActiveTab }: DashboardProps) {
           draggableHandle=".drag-handle"
           isDraggable={layoutMode === 'edit'} // Controlled by Nav
           isResizable={layoutMode === 'edit'} // Controlled by Nav
+          resizeHandles={['se', 'sw', 'ne', 'nw', 's', 'e', 'n', 'w']}
           onLayoutChange={onLayoutChange}
           margin={[16, 16]}
         >

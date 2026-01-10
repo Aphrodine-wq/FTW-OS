@@ -25,6 +25,7 @@ const TemplateGallery = React.lazy(() => import('@/components/modules/finance/in
 const InvoiceHistory = React.lazy(() => import('@/components/modules/finance/invoices/history/InvoiceHistory').then(module => ({ default: module.InvoiceHistory })))
 const ClientManager = React.lazy(() => import('@/components/modules/crm/clients/ClientManager').then(module => ({ default: module.ClientManager })))
 const LeadsPipeline = React.lazy(() => import('@/components/modules/crm/pipeline/LeadsPipeline').then(module => ({ default: module.LeadsPipeline })))
+const DevHQ = React.lazy(() => import('@/components/modules/dev/DevHQ').then(module => ({ default: module.DevHQ })))
 // Use Enhanced Task List
 const TaskList = React.lazy(() => import('@/components/modules/productivity/tasks/TaskListEnhanced').then(module => ({ default: module.TaskListEnhanced })))
 const CompUpdateManager = React.lazy(() => import('@/components/modules/productivity/documents/CompUpdateManager').then(module => ({ default: module.CompUpdateManager })))
