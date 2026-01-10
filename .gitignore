@@ -51,8 +51,8 @@ dist_build
 dist_temp_*
 dist_ftwos*
 dist_release_*
-releases/
-*.exe
+# releases/  <-- Commented out to allow tracking releases
+# *.exe      <-- Commented out to allow tracking executables
 *.dmg
 *.zip
 *.blockmap
