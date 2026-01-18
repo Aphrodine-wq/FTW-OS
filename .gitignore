@@ -1,0 +1,58 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.sw?
+
+# Trae
+.trae
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Problematic files
+nul
+
+# Build & Releases
+dist
+dist-electron
+dist_build
+dist_temp_*
+dist_ftwos*
+dist_release_*
+# releases/  <-- Commented out to allow tracking releases
+# *.exe      <-- Commented out to allow tracking executables
+*.dmg
+*.zip
+*.blockmap

@@ -1,0 +1,314 @@
+import React, { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { useAuthStore } from '@/stores/auth-store'
+import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { isSupabaseConfigured } from '@/services/supabase'
+
+type AuthMode = 'login' | 'register' | 'forgot-password'
+
+export function LoginScreen() {
+  const { login, loginAsGuest, loginWithEmail, registerWithEmail, resetPassword, checkSession } = useAuthStore()
+  const [isLoading, setIsLoading] = useState(false)
+  const [isConfigured, setIsConfigured] = useState(true)
+  const [authMode, setAuthMode] = useState<AuthMode>('login')
+  const [showPassword, setShowPassword] = useState(false)
+
+  // Form state
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  useEffect(() => {
+    setIsConfigured(isSupabaseConfigured())
+    // Check if we were redirected back from Google
+    checkSession()
+  }, [])
+
+  const handleGoogleLogin = async () => {
+    if (!isConfigured) return
+    setIsLoading(true)
+    await login()
+    // Loading state persists until redirect happens
+  }
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setIsLoading(true)
+
+    const result = await loginWithEmail(email, password)
+
+    if (result.error) {
+      setError(result.error)
+      setIsLoading(false)
+    }
+    // If successful, auth listener will update the state
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setIsLoading(true)
+
+    const result = await registerWithEmail(email, password, name)
+
+    if (result.error) {
+      setError(result.error)
+      setIsLoading(false)
+    } else {
+      setSuccess('Registration successful! Please check your email to verify your account.')
+      setIsLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setIsLoading(true)
+
+    const result = await resetPassword(email)
+
+    if (result.error) {
+      setError(result.error)
+    } else {
+      setSuccess('Password reset email sent! Please check your inbox.')
+    }
+    setIsLoading(false)
+  }
+
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-slate-950 text-slate-50 relative overflow-hidden">
+      
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-20" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
+      
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10 w-full max-w-md p-4"
+      >
+        <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-800">
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 ring-1 ring-blue-500/50">
+               <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+               </svg>
+            </div>
+            <CardTitle className="text-2xl font-bold tracking-tight text-white">
+              {authMode === 'login' && 'Welcome Back'}
+              {authMode === 'register' && 'Create Account'}
+              {authMode === 'forgot-password' && 'Reset Password'}
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              {authMode === 'login' && 'Sign in to access your FTW-OS workspace'}
+              {authMode === 'register' && 'Get started with your new account'}
+              {authMode === 'forgot-password' && 'Enter your email to reset your password'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Error/Success Messages */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm"
+                >
+                  {error}
+                </motion.div>
+              )}
+              {success && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm"
+                >
+                  {success}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Email/Password Form */}
+            <form onSubmit={authMode === 'login' ? handleEmailLogin : authMode === 'register' ? handleRegister : handleForgotPassword} className="space-y-4">
+              {authMode === 'register' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">Full Name</label>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      placeholder="John Doe"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 pl-10"
+                    />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Email</label>
+                <div className="relative">
+                  <Input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 pl-10"
+                  />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                </div>
+              </div>
+
+              {authMode !== 'forgot-password' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">Password</label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 pl-10 pr-10"
+                    />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    {authMode === 'login' && 'Sign In'}
+                    {authMode === 'register' && 'Create Account'}
+                    {authMode === 'forgot-password' && 'Send Reset Link'}
+                  </>
+                )}
+              </Button>
+            </form>
+
+            {/* Mode Switcher */}
+            <div className="space-y-2 text-center text-sm">
+              {authMode === 'login' && (
+                <>
+                  <button
+                    onClick={() => setAuthMode('forgot-password')}
+                    className="text-slate-400 hover:text-slate-300 transition-colors"
+                  >
+                    Forgot your password?
+                  </button>
+                  <p className="text-slate-500">
+                    Don't have an account?{' '}
+                    <button
+                      onClick={() => setAuthMode('register')}
+                      className="text-blue-400 hover:text-blue-300 font-medium"
+                    >
+                      Sign up
+                    </button>
+                  </p>
+                </>
+              )}
+              {(authMode === 'register' || authMode === 'forgot-password') && (
+                <p className="text-slate-500">
+                  Already have an account?{' '}
+                  <button
+                    onClick={() => setAuthMode('login')}
+                    className="text-blue-400 hover:text-blue-300 font-medium"
+                  >
+                    Sign in
+                  </button>
+                </p>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-700"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-2 bg-slate-900/50 text-slate-500">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Google OAuth */}
+            <Button
+              variant="outline"
+              className="w-full h-12 bg-white/5 hover:bg-white/10 text-white border-slate-700 font-medium"
+              onClick={handleGoogleLogin}
+              disabled={isLoading || !isConfigured}
+              type="button"
+            >
+              <div className="flex items-center gap-3">
+                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+                <span>Google</span>
+              </div>
+            </Button>
+
+            {/* Developer Mode - ALWAYS VISIBLE FOR NOW */}
+            <div className="mt-4">
+                <Button
+                  variant="ghost"
+                  className="w-full text-slate-500 hover:text-slate-300 hover:bg-slate-800"
+                  onClick={() => loginAsGuest()}
+                  type="button"
+                >
+                  Skip for now (Developer Guest Mode)
+                </Button>
+            </div>
+
+            <p className="text-center text-xs text-slate-500 mt-4">
+              By continuing, you agree to our Terms of Service and Privacy Policy.
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  )
+}

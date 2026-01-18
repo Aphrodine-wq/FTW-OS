@@ -1,0 +1,35 @@
+# Dashboard.tsx Fixes
+# Apply these changes manually or use this as reference
+
+## Fix 1: Add setLayoutMode function (around line 82)
+After this line:
+  const { mode, background, layoutMode, setTheme } = useThemeStore()
+
+Add these lines:
+  
+  // Wrapper function for setLayoutMode
+  const setLayoutMode = (newMode: 'edit' | 'locked' | 'view') => {
+    setTheme({ layoutMode: newMode === 'view' ? 'locked' : newMode })
+  }
+
+## Fix 2: Remove draggableHandle prop (around line 254)
+Find and DELETE this line:
+                    draggableHandle=".drag-handle"
+
+## Fix 3: Fix onClick handler (around line 463)
+Change from:
+                onClick={resetLayout}
+
+To:
+                onClick={() => resetLayout()}
+
+## Fix 4: Fix onClick handler (around line 483)  
+Change from:
+               onClick={resetLayout}
+
+To:
+               onClick={() => resetLayout()}
+
+## Fix 5: Remove unused variable warning (around line 173)
+The 'availableWidgets' variable is declared but not used.
+Either remove it or use it in the widget armory section.

@@ -1,0 +1,45 @@
+appId: com.ftwos.app
+productName: FTWOS
+directories:
+  output: dist_out
+  buildResources: resources
+
+files:
+  - dist-electron/**/*
+  - dist_build/**/*
+  - "!**/*.{ts,tsx,map}"
+  - "!**/{.git,.gitignore,.eslintrc,.prettierrc}"
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,*.md}"
+
+asar: true
+asarUnpack:
+  - "**/node_modules/sql.js/**/*"
+  - "**/node_modules/@supabase/**/*"
+
+compression: maximum
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icons/icon.png
+  # certificateFile: null
+  verifyUpdateCodeSignature: false
+  forceCodeSigning: false
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: FTWOS
+  artifactName: "${productName} Setup ${version}.${ext}"
+  deleteAppDataOnUninstall: false
+  allowElevation: true
+  runAfterFinish: true
+
+publish:
+  provider: generic
+  url: "https://your-update-server.com/releases"

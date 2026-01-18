@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/services/utils'
+import { prefetchModule } from '@/lib/module-preloader'
 import {
   LayoutDashboard,
   Receipt,
@@ -46,6 +47,7 @@ import {
   Terminal,
 } from 'lucide-react'
 import { useThemeStore } from '@/stores/theme-store'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface PhotonNavProps {
   activeTab: string
@@ -55,9 +57,10 @@ interface PhotonNavProps {
 
 export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab, setCmdOpen }: PhotonNavProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [activeSection, setActiveSection] = useState<string | null>(null)
+  const [activeSection, setActiveSection] = useState<string | null>('core')
   const [isFocusMode, setIsFocusMode] = useState(false)
   const { mode, layoutMode, setTheme } = useThemeStore()
+  const { syncStatus, lastSyncTime } = useSyncStore()
 
   // Handle Focus Mode: Only show when hovering near top if enabled
   useEffect(() => {
@@ -85,153 +88,85 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
       color: 'from-blue-500 to-cyan-500',
       bgColor: 'bg-blue-500/10',
       items: [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, desc: 'Stats' },
-        { id: 'dev', label: 'Dev HQ', icon: Code, desc: 'Codebase' },
-        { id: 'pulse', label: 'Pulse', icon: Activity, desc: 'Live Feed' },
-        { id: 'analytics', label: 'Analytics', icon: PieChart, desc: 'Metrics' },
-        { id: 'settings', label: 'Settings', icon: Settings, desc: 'Config' },
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, desc: 'Overview & Stats' },
+        { id: 'analytics', label: 'Analytics', icon: PieChart, desc: 'Performance Metrics' },
+        { id: 'settings', label: 'Settings', icon: Settings, desc: 'System Config' },
+        { id: 'pulse', label: 'Pulse', icon: Activity, desc: 'Live Activity Feed' },
       ]
     },
     {
-      id: 'productivity',
-      label: 'Productivity',
-      icon: Target,
+      id: 'workspace',
+      label: 'Workspace',
+      icon: Folder,
       color: 'from-emerald-500 to-teal-500',
       bgColor: 'bg-emerald-500/10',
       items: [
-        { id: 'projects', label: 'Projects', icon: Folder, desc: 'Hub' },
-        { id: 'tasks', label: 'Tasks', icon: CheckSquare, desc: 'Todo' },
-        { id: 'tracker', label: 'Time Tracker', icon: Clock, desc: 'Sessions' },
+        { id: 'projects', label: 'Projects', icon: Folder, desc: 'Mission Control' },
+        { id: 'tasks', label: 'Tasks', icon: CheckSquare, desc: 'Action Items' },
         { id: 'calendar', label: 'Calendar', icon: Calendar, desc: 'Schedule' },
+        { id: 'brain', label: 'Notes', icon: BookOpen, desc: 'Second Brain' },
+        { id: 'tracker', label: 'Time Tracker', icon: Clock, desc: 'Deep Work' },
+        { id: 'courses', label: 'Learning', icon: GraduationCap, desc: 'Skill Tree' },
       ]
     },
     {
-      id: 'automation',
-      label: 'Logic',
-      icon: Zap,
-      color: 'from-amber-400 to-yellow-500',
-      bgColor: 'bg-amber-400/10',
-      items: [
-        { id: 'workflows', label: 'Workflows', icon: Zap, desc: 'IFTTT' },
-        { id: 'webhooks', label: 'Webhooks', icon: Globe, desc: 'Listeners' },
-      ]
-    },
-    {
-      id: 'infra',
-      label: 'Infra',
-      icon: Server,
-      color: 'from-blue-500 to-indigo-600',
-      bgColor: 'bg-blue-500/10',
-      items: [
-        { id: 'servers', label: 'Servers', icon: Server, desc: 'SSH' },
-        { id: 'docker', label: 'Docker', icon: Box, desc: 'Containers' },
-        { id: 'uptime', label: 'Uptime', icon: Activity, desc: 'Status' },
-      ]
-    },
-    {
-      id: 'knowledge',
-      label: 'Brain',
-      icon: Brain,
-      color: 'from-pink-500 to-rose-500',
-      bgColor: 'bg-pink-500/10',
-      items: [
-        { id: 'brain', label: 'Notes', icon: BookOpen, desc: 'PKM' },
-        { id: 'courses', label: 'Learning', icon: GraduationCap, desc: 'Tracker' },
-        { id: 'snippets', label: 'Snippets', icon: Code2, desc: 'Library' },
-      ]
-    },
-    {
-      id: 'finance',
-      label: 'Finance',
-      icon: Receipt,
-      color: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-500/10',
-      items: [
-        { id: 'finance', label: 'Invoices', icon: Receipt, desc: 'Create & manage' },
-        { id: 'expenses', label: 'Expenses', icon: PieChart, desc: 'Track costs' },
-        { id: 'taxes', label: 'Tax Vault', icon: Shield, desc: 'Filings' },
-        { id: 'products', label: 'Products', icon: FileBox, desc: 'Catalog' },
-        { id: 'history', label: 'History', icon: Code, desc: 'Archives' },
-      ]
-    },
-    {
-      id: 'legal',
-      label: 'Admin',
-      icon: Scale,
-      color: 'from-slate-500 to-slate-700',
-      bgColor: 'bg-slate-500/10',
-      items: [
-        { id: 'contracts', label: 'Contracts', icon: FileText, desc: 'Agreements' },
-        { id: 'assets', label: 'Assets', icon: Laptop, desc: 'Inventory' },
-        { id: 'payroll', label: 'Payroll', icon: Users, desc: 'Contractors' },
-      ]
-    },
-    {
-      id: 'security',
-      label: 'Security',
-      icon: Shield,
-      color: 'from-red-500 to-rose-600',
-      bgColor: 'bg-red-500/10',
-      items: [
-        { id: 'vault', label: 'Vault', icon: Key, desc: 'Passwords' },
-      ]
-    },
-    {
-      id: 'crm',
-      label: 'CRM',
-      icon: Users,
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-500/10',
-      items: [
-        { id: 'crm', label: 'Clients', icon: Users, desc: 'Contacts' },
-        { id: 'pipeline', label: 'Pipeline', icon: Target, desc: 'Sales' },
-      ]
-    },
-    {
-      id: 'communication',
-      label: 'Office Suite',
-      icon: Mail,
-      color: 'from-pink-500 to-rose-500',
-      bgColor: 'bg-pink-500/10',
-      items: [
-        { id: 'mail', label: 'Mail', icon: Mail, desc: 'Inbox' },
-        { id: 'documents', label: 'Drive', icon: Folder, desc: 'Files' },
-        { id: 'trae', label: 'Trae Coder', icon: Terminal, desc: 'SOLO IDE' },
-      ]
-    },
-    {
-      id: 'marketing',
-      label: 'Growth',
-      icon: Share2,
-      color: 'from-yellow-500 to-orange-500',
-      bgColor: 'bg-yellow-500/10',
-      items: [
-        { id: 'marketing', label: 'Marketing', icon: BarChart3, desc: 'Analytics' },
-        { id: 'content-calendar', label: 'Content', icon: Calendar, desc: 'Schedule' },
-        { id: 'seo', label: 'SEO', icon: Search, desc: 'Rankings' },
-        { id: 'ads', label: 'Ad Manager', icon: Megaphone, desc: 'Campaigns' },
-        { id: 'newsletter', label: 'Newsletter', icon: PenTool, desc: 'Broadcasts' },
-      ]
-    },
-    {
-      id: 'ai',
-      label: 'Intelligence',
-      icon: Sparkles,
+      id: 'engineering',
+      label: 'Engineering',
+      icon: Terminal,
       color: 'from-violet-500 to-purple-600',
       bgColor: 'bg-violet-500/10',
       items: [
-        { id: 'research', label: 'Research', icon: Bot, desc: 'Agent' },
-        { id: 'voice', label: 'Voice', icon: Mic, desc: 'Command' },
+        { id: 'dev', label: 'Dev HQ', icon: Code, desc: 'Repository Manager' },
+        { id: 'trae', label: 'Trae Coder', icon: Terminal, desc: 'Integrated IDE' },
+        { id: 'snippets', label: 'Snippets', icon: Code2, desc: 'Code Library' },
+        { id: 'servers', label: 'Servers', icon: Server, desc: 'Infrastructure' },
+        { id: 'docker', label: 'Docker', icon: Box, desc: 'Containers' },
+        { id: 'workflows', label: 'Workflows', icon: Zap, desc: 'Automation' },
+        { id: 'webhooks', label: 'Webhooks', icon: Globe, desc: 'API Listeners' },
+      ]
+    },
+    {
+      id: 'business',
+      label: 'Business',
+      icon: Receipt,
+      color: 'from-amber-400 to-orange-500',
+      bgColor: 'bg-amber-400/10',
+      items: [
+        { id: 'finance', label: 'Invoices', icon: Receipt, desc: 'Billing & Payments' },
+        { id: 'expenses', label: 'Expenses', icon: PieChart, desc: 'Cost Tracking' },
+        { id: 'crm', label: 'Clients', icon: Users, desc: 'Relationships' },
+        { id: 'pipeline', label: 'Pipeline', icon: Target, desc: 'Deal Flow' },
+        { id: 'products', label: 'Products', icon: FileBox, desc: 'Inventory' },
+        { id: 'taxes', label: 'Tax Vault', icon: Shield, desc: 'Compliance' },
+      ]
+    },
+    {
+      id: 'growth',
+      label: 'Growth',
+      icon: Megaphone,
+      color: 'from-pink-500 to-rose-500',
+      bgColor: 'bg-pink-500/10',
+      items: [
+        { id: 'marketing', label: 'Marketing', icon: BarChart3, desc: 'Campaigns' },
+        { id: 'mail', label: 'Mail', icon: Mail, desc: 'Communications' },
+        { id: 'content-calendar', label: 'Content', icon: Calendar, desc: 'Publishing' },
+        { id: 'documents', label: 'Drive', icon: Folder, desc: 'Assets' },
+        { id: 'seo', label: 'SEO', icon: Search, desc: 'Visibility' },
+        { id: 'newsletter', label: 'Newsletter', icon: PenTool, desc: 'Audience' },
       ]
     },
     {
       id: 'system',
       label: 'System',
-      icon: Settings,
-      color: 'from-slate-400 to-slate-600',
-      bgColor: 'bg-slate-400/10',
+      icon: Shield,
+      color: 'from-slate-500 to-gray-600',
+      bgColor: 'bg-slate-500/10',
       items: [
-        { id: 'update', label: 'Update', icon: RefreshCw, desc: 'OS Version' },
+        { id: 'vault', label: 'Security Vault', icon: Key, desc: 'Credentials' },
+        { id: 'contracts', label: 'Contracts', icon: FileText, desc: 'Legal' },
+        { id: 'assets', label: 'Assets', icon: Laptop, desc: 'Hardware' },
+        { id: 'payroll', label: 'Payroll', icon: Users, desc: 'Team' },
+        { id: 'update', label: 'Update OS', icon: RefreshCw, desc: `v${__APP_VERSION__}` },
       ]
     }
   ]
@@ -414,6 +349,8 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.03 }}
+                      onMouseEnter={() => prefetchModule(item.id)}
+                      onFocus={() => prefetchModule(item.id)}
                       onClick={() => {
                         setActiveTab(item.id)
                         setIsExpanded(false)
