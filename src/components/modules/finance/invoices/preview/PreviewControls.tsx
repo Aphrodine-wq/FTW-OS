@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Download, Copy, Printer, Save, Mail, CheckCircle, FilePlus, Loader2, MessageSquare, FileSpreadsheet } from 'lucide-react'
 import { useInvoice } from '@/hooks/useInvoice'
 import { useToast } from '@/components/ui/use-toast'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
+// html2canvas and jsPDF are lazy-loaded only when exporting PDF
 
 export function PreviewControls() {
   const { currentInvoice, updateInvoice, generateInvoice } = useInvoice()
@@ -48,6 +47,12 @@ export function PreviewControls() {
     setIsExporting(true)
 
     try {
+      // Dynamically import heavy libraries only when needed
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ])
+
       const element = document.getElementById('invoice-preview')
       if (!element) throw new Error('Preview element not found')
 
