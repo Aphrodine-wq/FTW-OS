@@ -197,15 +197,34 @@ export function preloadModuleCategory(category: string): void {
 }
 
 /**
- * Preload high-priority modules
+ * Preload high-priority modules with smart scheduling
+ * - Immediate: priority >= 9 (dashboard-critical)
+ * - Deferred: priority 7-8 (load during idle time)
  */
 export function preloadHighPriorityModules(): void {
-  const highPriorityModules = Object.entries(MODULE_PRIORITIES)
-    .filter(([_, priority]) => priority >= 7)
+  // IMMEDIATE preload (priority >= 9) - only what user sees on dashboard
+  const immediatePriorityModules = Object.entries(MODULE_PRIORITIES)
+    .filter(([_, priority]) => priority >= 9)
     .map(([moduleId]) => moduleId)
     .sort((a, b) => MODULE_PRIORITIES[b] - MODULE_PRIORITIES[a])
 
-  highPriorityModules.forEach(moduleId => prefetchModule(moduleId))
+  immediatePriorityModules.forEach(moduleId => preloadModule(moduleId))
+
+  // DEFER secondary modules (priority 7-8) to idle time
+  const deferredPriorityModules = Object.entries(MODULE_PRIORITIES)
+    .filter(([_, priority]) => priority >= 7 && priority < 9)
+    .map(([moduleId]) => moduleId)
+
+  // Use requestIdleCallback for deferred modules
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(() => {
+      deferredPriorityModules.forEach(moduleId => prefetchModule(moduleId))
+    }, { timeout: 5000 })
+  } else {
+    setTimeout(() => {
+      deferredPriorityModules.forEach(moduleId => prefetchModule(moduleId))
+    }, 3000)
+  }
 }
 
 /**
