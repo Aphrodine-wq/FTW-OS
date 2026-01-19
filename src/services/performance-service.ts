@@ -27,7 +27,9 @@ class PerformanceService {
   private metrics: PerformanceMetrics[] = []
   private readonly MAX_METRICS_HISTORY = 100
   private chunkLoadTimes: Map<string, number> = new Map()
-  
+  private intervalIds: number[] = []
+  private observer: PerformanceObserver | null = null
+
   // Performance budgets
   private readonly BUDGETS = {
     initialLoad: 2000, // 2 seconds
@@ -398,11 +400,26 @@ class PerformanceService {
       // Monitor chunk loading
       this.monitorChunkLoading()
 
-      // Track bundle size periodically
-      setInterval(() => this.trackBundleSize(), 60000) // Every minute
+      // Track bundle size periodically - STORE INTERVAL ID
+      const bundleInterval = setInterval(() => this.trackBundleSize(), 60000) as unknown as number
+      this.intervalIds.push(bundleInterval)
 
-      // Clear old metrics weekly
-      setInterval(() => this.clearOldMetrics(7), 7 * 24 * 60 * 60 * 1000)
+      // Clear old metrics weekly - STORE INTERVAL ID
+      const cleanupInterval = setInterval(() => this.clearOldMetrics(7), 7 * 24 * 60 * 60 * 1000) as unknown as number
+      this.intervalIds.push(cleanupInterval)
+    }
+  }
+
+  // Add cleanup method
+  destroy(): void {
+    // Clear all intervals
+    this.intervalIds.forEach(id => clearInterval(id))
+    this.intervalIds = []
+
+    // Disconnect observer
+    if (this.observer) {
+      this.observer.disconnect()
+      this.observer = null
     }
   }
 
@@ -413,7 +430,7 @@ class PerformanceService {
     }
 
     try {
-      const observer = new PerformanceObserver((list) => {
+      this.observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'resource' && entry.name.includes('.js')) {
             const resourceEntry = entry as PerformanceResourceTiming
@@ -424,7 +441,7 @@ class PerformanceService {
         }
       })
 
-      observer.observe({ entryTypes: ['resource'] })
+      this.observer.observe({ entryTypes: ['resource'] })
     } catch (e) {
       console.warn('PerformanceObserver not supported:', e)
     }
@@ -432,3 +449,10 @@ class PerformanceService {
 }
 
 export const performanceService = new PerformanceService()
+
+// Add cleanup on window unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    performanceService.destroy()
+  })
+}

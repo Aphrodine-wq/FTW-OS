@@ -9,18 +9,26 @@ export function BatteryWidget({ id, onRemove }: { id?: string; onRemove?: () => 
   useEffect(() => {
     // In Electron, use navigator.getBattery() or system APIs
     if ('getBattery' in navigator) {
-      (navigator as any).getBattery().then((battery: any) => {
+      let battery: any = null
+
+      const chargingChangeHandler = () => setIsCharging(battery.charging)
+      const levelChangeHandler = () => setBatteryLevel(Math.round(battery.level * 100))
+
+      (navigator as any).getBattery().then((bat: any) => {
+        battery = bat
         setBatteryLevel(Math.round(battery.level * 100))
         setIsCharging(battery.charging)
-        
-        battery.addEventListener('chargingchange', () => {
-          setIsCharging(battery.charging)
-        })
-        
-        battery.addEventListener('levelchange', () => {
-          setBatteryLevel(Math.round(battery.level * 100))
-        })
+
+        battery.addEventListener('chargingchange', chargingChangeHandler)
+        battery.addEventListener('levelchange', levelChangeHandler)
       })
+
+      return () => {
+        if (battery) {
+          battery.removeEventListener('chargingchange', chargingChangeHandler)
+          battery.removeEventListener('levelchange', levelChangeHandler)
+        }
+      }
     } else {
       // Fallback simulation
       const interval = setInterval(() => {

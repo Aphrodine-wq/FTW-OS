@@ -68,6 +68,8 @@ export const MODULE_PRIORITIES: Record<string, number> = {
 const preloadedModules = new Set<string>()
 const preloadPromises = new Map<string, Promise<any>>()
 const prefetchPromises = new Map<string, Promise<any>>()
+// Track pending callbacks for cleanup
+const pendingCallbacks = new Map<string, number>()
 
 /**
  * Get module category
@@ -123,28 +125,65 @@ export function prefetchModule(moduleId: string): void {
     return
   }
 
+  // Cancel any existing pending callback for this module
+  if (pendingCallbacks.has(moduleId)) {
+    const existingId = pendingCallbacks.get(moduleId)!
+    if ('cancelIdleCallback' in window) {
+      (window as any).cancelIdleCallback(existingId)
+    } else {
+      clearTimeout(existingId)
+    }
+    pendingCallbacks.delete(moduleId)
+  }
+
   // Use requestIdleCallback if available, otherwise setTimeout
   const schedulePrefetch = () => {
     if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
+      const callbackId = (window as any).requestIdleCallback(() => {
+        pendingCallbacks.delete(moduleId)
         const promise = importFn().then(() => {
           preloadedModules.add(moduleId)
+          prefetchPromises.delete(moduleId)
+        }).catch((err) => {
+          console.warn(`Failed to prefetch module ${moduleId}:`, err)
           prefetchPromises.delete(moduleId)
         })
         prefetchPromises.set(moduleId, promise)
       }, { timeout: 2000 })
+
+      pendingCallbacks.set(moduleId, callbackId)
     } else {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
+        pendingCallbacks.delete(moduleId)
         const promise = importFn().then(() => {
           preloadedModules.add(moduleId)
           prefetchPromises.delete(moduleId)
+        }).catch((err) => {
+          console.warn(`Failed to prefetch module ${moduleId}:`, err)
+          prefetchPromises.delete(moduleId)
         })
         prefetchPromises.set(moduleId, promise)
-      }, 100)
+      }, 100) as unknown as number
+
+      pendingCallbacks.set(moduleId, timeoutId)
     }
   }
 
   schedulePrefetch()
+}
+
+/**
+ * Cancel all pending prefetch callbacks
+ */
+export function cancelPendingPrefetches(): void {
+  pendingCallbacks.forEach((callbackId) => {
+    if ('cancelIdleCallback' in window) {
+      (window as any).cancelIdleCallback(callbackId)
+    } else {
+      clearTimeout(callbackId)
+    }
+  })
+  pendingCallbacks.clear()
 }
 
 /**

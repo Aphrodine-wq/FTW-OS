@@ -67,17 +67,18 @@ export const useStoreInitialization = () => {
 
   useEffect(() => {
     let mounted = true
-    
+    const unsubscribeFns: Array<() => void> = []
+
     const loadStores = async () => {
       try {
         await initStores()
         if (!mounted) return
-        
+
         const settingsStore = useSettingsStore.getState()
         const themeStore = useThemeStore.getState()
         const authStore = useAuthStore.getState()
         const secureStore = useSecureSettings.getState()
-        
+
         const initialState: StoreState = {
           loadSettings: settingsStore.loadSettings,
           mode: themeStore.mode,
@@ -92,11 +93,11 @@ export const useStoreInitialization = () => {
           loadAllKeys: secureStore.loadAllKeys,
           setSecureKey: secureStore.setSecureKey
         }
-        
+
         setStoreState(initialState)
-        
-        // Subscribe to store changes
-        useThemeStore.subscribe((state: any) => {
+
+        // Subscribe to store changes and store unsubscribe functions
+        const unsubTheme = useThemeStore.subscribe((state: any) => {
           if (mounted) {
             setStoreState((prev: StoreState | null) => prev ? {
               ...prev,
@@ -110,8 +111,9 @@ export const useStoreInitialization = () => {
             } : null)
           }
         })
-        
-        useAuthStore.subscribe((state: any) => {
+        unsubscribeFns.push(unsubTheme)
+
+        const unsubAuth = useAuthStore.subscribe((state: any) => {
           if (mounted) {
             setStoreState((prev: StoreState | null) => prev ? {
               ...prev,
@@ -119,16 +121,21 @@ export const useStoreInitialization = () => {
             } : null)
           }
         })
-        
+        unsubscribeFns.push(unsubAuth)
+
         setStoresReady(true)
       } catch (error: any) {
         console.error('[App] Failed to initialize stores:', error)
         if (mounted) setStoreError(error)
       }
     }
-    
+
     loadStores()
-    return () => { mounted = false }
+
+    return () => {
+      mounted = false
+      unsubscribeFns.forEach(unsub => unsub())
+    }
   }, [])
 
   return { storesReady, storeError, storeState }
