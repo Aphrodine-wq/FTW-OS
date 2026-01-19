@@ -21,6 +21,7 @@
     "deploy": "node scripts/release.js",
     "preview": "vite preview",
     "analyze": "node scripts/analyze-bundle.js",
+    "perf:report": "node scripts/perf-report.js",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "test": "vitest",
     "test:e2e": "playwright test"
