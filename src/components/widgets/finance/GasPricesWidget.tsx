@@ -9,7 +9,7 @@ interface GasPrice {
   type: 'regular' | 'mid' | 'premium'
 }
 
-export function GasPricesWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
+export const GasPricesWidget = React.memo(function GasPricesWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
   const { data: prices, isLoading } = useQuery<GasPrice[]>({
     queryKey: ['gas-prices'],
     queryFn: async () => {
@@ -53,5 +53,5 @@ export function GasPricesWidget({ id, onRemove }: { id?: string; onRemove?: () =
       </div>
     </AppWidget>
   )
-}
+})
 

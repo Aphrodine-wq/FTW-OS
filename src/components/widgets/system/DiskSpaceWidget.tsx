@@ -9,7 +9,7 @@ interface DiskInfo {
   percent: number
 }
 
-export function DiskSpaceWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
+export const DiskSpaceWidget = React.memo(function DiskSpaceWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
   const [disks, setDisks] = useState<DiskInfo[]>([])
 
   useEffect(() => {
@@ -81,5 +81,5 @@ export function DiskSpaceWidget({ id, onRemove }: { id?: string; onRemove?: () =
       </div>
     </AppWidget>
   )
-}
+})
 

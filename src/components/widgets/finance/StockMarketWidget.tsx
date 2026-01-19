@@ -10,7 +10,7 @@ interface StockData {
   changePercent: number
 }
 
-export function StockMarketWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
+export const StockMarketWidget = React.memo(function StockMarketWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
   const { data: stocks, isLoading } = useQuery<StockData[]>({
     queryKey: ['stock-market'],
     queryFn: async () => {
@@ -69,5 +69,5 @@ export function StockMarketWidget({ id, onRemove }: { id?: string; onRemove?: ()
       </div>
     </AppWidget>
   )
-}
+})
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Wifi, Download, Upload } from 'lucide-react'
 import { AppWidget } from '../core/AppWidget'
 
-export function NetworkSpeedWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
+export const NetworkSpeedWidget = React.memo(function NetworkSpeedWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
   const [downloadSpeed, setDownloadSpeed] = useState(0)
   const [uploadSpeed, setUploadSpeed] = useState(0)
 
@@ -44,5 +44,5 @@ export function NetworkSpeedWidget({ id, onRemove }: { id?: string; onRemove?: (
       </div>
     </AppWidget>
   )
-}
+})
 

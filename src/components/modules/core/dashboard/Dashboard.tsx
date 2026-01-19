@@ -1,4 +1,4 @@
-import React, { useMemo, Suspense, useState, useEffect, useRef } from 'react'
+import React, { useMemo, Suspense, useState, useEffect, useRef, useCallback } from 'react'
 import { Responsive } from 'react-grid-layout'
 import { Plus, LayoutGrid, Trash2, FileText, Receipt, Loader2, X, Search, MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -47,6 +47,22 @@ const WidgetSkeleton = () => (
     <Loader2 className="h-6 w-6 animate-spin opacity-20" />
   </div>
 )
+
+// Debounce utility to reduce resize recalculations
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      timeout = null
+      func(...args)
+    }
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
 
 // Widget type aliases for backward compatibility
 const WIDGET_ALIASES: Record<string, string> = {
@@ -105,6 +121,14 @@ function DashboardInner({ setActiveTab, stores }: DashboardProps & { stores: Sto
 
   const [width, setWidth] = useState(1200)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Debounced width setter - only update after 150ms of no resize
+  const debouncedSetWidth = useCallback(
+    debounce((newWidth: number) => {
+      setWidth(newWidth)
+    }, 150),
+    []
+  )
   
   const [showMondayBriefing, setShowMondayBriefing] = useState(false)
   const [currentDayTab, setCurrentDayTab] = useState(() => {
@@ -142,14 +166,19 @@ function DashboardInner({ setActiveTab, stores }: DashboardProps & { stores: Sto
 
   useEffect(() => {
     if (!containerRef.current) return
+
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        setWidth(entry.contentRect.width)
+        debouncedSetWidth(entry.contentRect.width)
       }
     })
+
     resizeObserver.observe(containerRef.current)
-    return () => resizeObserver.disconnect()
-  }, [])
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [debouncedSetWidth])
 
   const layouts = useMemo(() => ({
     lg: widgets.map((w) => ({ 

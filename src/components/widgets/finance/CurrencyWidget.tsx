@@ -10,7 +10,7 @@ interface CurrencyRate {
   change: number
 }
 
-export function CurrencyWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
+export const CurrencyWidget = React.memo(function CurrencyWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
   const { data: rates, isLoading } = useQuery<CurrencyRate[]>({
     queryKey: ['currency-rates'],
     queryFn: async () => {
@@ -66,5 +66,5 @@ export function CurrencyWidget({ id, onRemove }: { id?: string; onRemove?: () =>
       </div>
     </AppWidget>
   )
-}
+})
 
