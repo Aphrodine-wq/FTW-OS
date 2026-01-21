@@ -346,4 +346,5 @@ export interface Project {
   createdAt: Date
   updatedAt: Date
   tags?: string[]
+  localPath?: string
 }

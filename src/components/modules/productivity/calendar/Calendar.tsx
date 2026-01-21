@@ -1,136 +1,179 @@
 import React, { useState } from 'react'
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar'
 import moment from 'moment'
-import 'react-big-calendar/lib/css/react-big-calendar.css'
-import { Card } from '@/components/ui/card'
+import { Plus, ChevronLeft, ChevronRight, X, Clock, MapPin, AlignLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
+import { useCalendarStore } from '@/stores/calendar-store'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import 'react-big-calendar/lib/css/react-big-calendar.css'
 import { cn } from '@/services/utils'
 
-// Setup the localizer for react-big-calendar
 const localizer = momentLocalizer(moment)
 
-interface CalendarEvent {
-  id: string
-  title: string
-  start: Date
-  end: Date
-  allDay?: boolean
-  resource?: string
-}
-
-// Mock Events
-const MOCK_EVENTS: CalendarEvent[] = [
-  {
-    id: '1',
-    title: 'Team Standup',
-    start: new Date(new Date().setHours(10, 0, 0, 0)),
-    end: new Date(new Date().setHours(10, 30, 0, 0)),
-  },
-  {
-    id: '2',
-    title: 'Client Meeting - Acme',
-    start: new Date(new Date().setHours(14, 0, 0, 0)),
-    end: new Date(new Date().setHours(15, 0, 0, 0)),
-  },
-  {
-    id: '3',
-    title: 'Project Deadline',
-    start: new Date(new Date().setHours(17, 0, 0, 0)),
-    end: new Date(new Date().setHours(18, 0, 0, 0)),
-    allDay: true
-  }
-]
-
 export function Calendar() {
-  const [events, setEvents] = useState<CalendarEvent[]>(MOCK_EVENTS)
-  const [view, setView] = useState<'month' | 'week' | 'day'>('month')
+  const { events, addEvent, removeEvent } = useCalendarStore()
+  const [view, setView] = useState('month')
   const [date, setDate] = useState(new Date())
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
+  const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', description: '' })
+  const [selectedEvent, setSelectedEvent] = useState<any>(null)
 
   const handleNavigate = (action: 'PREV' | 'NEXT' | 'TODAY') => {
     const newDate = new Date(date)
     if (action === 'TODAY') {
-        setDate(new Date())
-        return
+      setDate(new Date())
+      return
     }
-
-    const direction = action === 'NEXT' ? 1 : -1
-    
-    if (view === 'month') newDate.setMonth(newDate.getMonth() + direction)
-    if (view === 'week') newDate.setDate(newDate.getDate() + (direction * 7))
-    if (view === 'day') newDate.setDate(newDate.getDate() + direction)
-    
+    const amount = action === 'NEXT' ? 1 : -1
+    if (view === 'month') newDate.setMonth(newDate.getMonth() + amount)
+    else if (view === 'week') newDate.setDate(newDate.getDate() + amount * 7)
+    else newDate.setDate(newDate.getDate() + amount)
     setDate(newDate)
   }
 
-  return (
-    <div className="h-full flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-200">
-      {/* Header */}
-      <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white">
+  const handleSaveEvent = () => {
+    if (!newEvent.title || !newEvent.start || !newEvent.end) return
+
+    addEvent({
+      title: newEvent.title,
+      start: new Date(newEvent.start),
+      end: new Date(newEvent.end),
+      description: newEvent.description,
+      allDay: false
+    })
+
+    setIsEventDialogOpen(false)
+    setNewEvent({ title: '', start: '', end: '', description: '' })
+  }
+
+  const handleDeleteEvent = () => {
+    if (selectedEvent) {
+      removeEvent(selectedEvent.id)
+      setSelectedEvent(null)
+    }
+  }
+
+  // Custom Toolbar
+  const CustomToolbar = (toolbar: any) => {
+    return (
+      <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                <CalendarIcon className="h-6 w-6 text-blue-600" />
-                {moment(date).format('MMMM YYYY')}
-            </h2>
-            <div className="flex items-center bg-slate-100 rounded-lg p-1">
-                <Button variant="ghost" size="icon" onClick={() => handleNavigate('PREV')}>
-                    <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleNavigate('TODAY')} className="text-xs font-bold">
-                    Today
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleNavigate('NEXT')}>
-                    <ChevronRight className="h-4 w-4" />
-                </Button>
-            </div>
+          <div className="flex bg-slate-100 p-1 rounded-lg">
+            <button onClick={() => handleNavigate('PREV')} className="p-1 hover:bg-white rounded transition-colors"><ChevronLeft className="h-4 w-4" /></button>
+            <button onClick={() => handleNavigate('TODAY')} className="px-3 text-sm font-medium hover:bg-white rounded transition-colors">Today</button>
+            <button onClick={() => handleNavigate('NEXT')} className="p-1 hover:bg-white rounded transition-colors"><ChevronRight className="h-4 w-4" /></button>
+          </div>
+          <h2 className="text-xl font-bold text-slate-800">
+            {moment(date).format('MMMM YYYY')}
+          </h2>
         </div>
 
-        <div className="flex items-center gap-4">
-            <div className="flex bg-slate-100 rounded-lg p-1">
-                {['month', 'week', 'day'].map((v) => (
-                    <button
-                        key={v}
-                        onClick={() => setView(v as any)}
-                        className={cn(
-                            "px-3 py-1.5 text-xs font-medium rounded-md capitalize transition-all",
-                            view === v ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                        )}
-                    >
-                        {v}
-                    </button>
-                ))}
-            </div>
-            <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4" /> New Event
-            </Button>
+        <div className="flex gap-4">
+          <div className="flex bg-slate-100 p-1 rounded-lg">
+            {['month', 'week', 'day'].map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={cn(
+                  "px-3 py-1 text-sm font-medium capitalize rounded transition-all",
+                  view === v ? "bg-white shadow text-slate-900" : "text-slate-500 hover:text-slate-700"
+                )}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+          <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800" onClick={() => setIsEventDialogOpen(true)}>
+            <Plus className="h-4 w-4" /> New Event
+          </Button>
         </div>
       </div>
+    )
+  }
 
-      {/* Calendar Grid */}
-      <div className="flex-1 p-4">
+  return (
+    <div className="h-full bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0">
         <BigCalendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: '100%' }}
-            view={view}
-            date={date}
-            onView={(v) => setView(v as any)}
-            onNavigate={(d) => setDate(d)}
-            toolbar={false} // Custom toolbar above
-            eventPropGetter={(event) => ({
-                style: {
-                    backgroundColor: '#EFF6FF',
-                    color: '#2563EB',
-                    border: '1px solid #BFDBFE',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: 500
-                }
-            })}
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: '100%' }}
+          view={view as any}
+          onView={(v) => setView(v)}
+          date={date}
+          onNavigate={(d) => setDate(d)}
+          components={{ toolbar: CustomToolbar }}
+          onSelectEvent={(event) => setSelectedEvent(event)}
+          eventPropGetter={(event) => ({
+            className: "bg-blue-100 text-blue-700 border-l-4 border-blue-500 text-xs font-semibold rounded-sm px-1.5 py-0.5"
+          })}
         />
       </div>
+
+      {/* New Event Dialog */}
+      <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Event</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Event Title</Label>
+              <Input id="title" value={newEvent.title} onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} placeholder="Meeting with team" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start">Start Time</Label>
+                <Input id="start" type="datetime-local" value={newEvent.start} onChange={e => setNewEvent({ ...newEvent, start: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end">End Time</Label>
+                <Input id="end" type="datetime-local" value={newEvent.end} onChange={e => setNewEvent({ ...newEvent, end: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="desc">Description</Label>
+              <Input id="desc" value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })} placeholder="Details..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEventDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEvent}>Save Event</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Event Details Dialog */}
+      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedEvent?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4 text-sm text-slate-600">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>
+                {selectedEvent && moment(selectedEvent.start).format('LLL')} - {selectedEvent && moment(selectedEvent.end).format('LT')}
+              </span>
+            </div>
+            {selectedEvent?.description && (
+              <div className="flex items-start gap-2">
+                <AlignLeft className="h-4 w-4 mt-1" />
+                <p>{selectedEvent.description}</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="destructive" onClick={handleDeleteEvent}>Delete Event</Button>
+            <Button variant="outline" onClick={() => setSelectedEvent(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   )
 }

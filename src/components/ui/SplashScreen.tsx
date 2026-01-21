@@ -1,22 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, Shield, Cpu, Database, CheckCircle } from 'lucide-react'
-import { FloatingParticles } from './landing/FloatingParticles'
+import { Terminal, Shield, Cpu, Database, Wifi, CheckCircle2, Zap } from 'lucide-react'
 
-type BootStage = {
-  id: string
-  label: string
-  icon: React.ComponentType<{ className?: string }>
-  duration: number
-  color: string
-}
-
-const BOOT_STAGES: BootStage[] = [
-  { id: 'security', label: 'Initializing Security', icon: Shield, duration: 800, color: '#3b82f6' },
-  { id: 'core', label: 'Loading Core Systems', icon: Cpu, duration: 600, color: '#8b5cf6' },
-  { id: 'database', label: 'Connecting Database', icon: Database, duration: 700, color: '#10b981' },
-  { id: 'modules', label: 'Loading Modules', icon: Zap, duration: 900, color: '#f59e0b' },
-  { id: 'ready', label: 'Ready to Launch', icon: CheckCircle, duration: 500, color: '#06b6d4' }
+const BOOT_LOGS = [
+  "Initializing kernel...",
+  "Loading system modules...",
+  "Mounting file systems...",
+  "Checking security protocols...",
+  "Verifying integrity...",
+  "Starting core services...",
+  "Establishing network connection...",
+  "Loading user preferences...",
+  "System ready."
 ]
 
 interface SplashScreenProps {
@@ -25,151 +20,132 @@ interface SplashScreenProps {
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({
-  onComplete,
-  progress = 0
+  onComplete
 }) => {
-  const [currentStage, setCurrentStage] = useState(0)
-  const [stageProgress, setStageProgress] = useState(0)
-  const [isComplete, setIsComplete] = useState(false)
+  const [logs, setLogs] = useState<string[]>([])
+  const [currentLogIndex, setCurrentLogIndex] = useState(0)
+  const [progress, setProgress] = useState(0)
 
+  // Log generation effect
   useEffect(() => {
-    if (progress >= 100) {
-      setTimeout(() => setIsComplete(true), 800)
+    if (currentLogIndex >= BOOT_LOGS.length) {
+      setTimeout(() => onComplete?.(), 800)
       return
     }
 
-    let timer: NodeJS.Timeout
-    let progressTimer: NodeJS.Timeout
-    
-    const stage = BOOT_STAGES[currentStage]
-    
-    // Progress animation for current stage
-    const increment = 100 / (stage.duration / 16) // 60fps
-    progressTimer = setInterval(() => {
-      setStageProgress(p => {
-        const newProgress = Math.min(p + increment, 100)
-        return newProgress
-      })
-    }, 16)
-    
-    // Stage transition
-    timer = setTimeout(() => {
-      if (currentStage < BOOT_STAGES.length - 1) {
-        setCurrentStage(c => c + 1)
-        setStageProgress(0)
-      }
-    }, stage.duration)
-    
-    return () => {
-      clearTimeout(timer)
-      clearInterval(progressTimer)
-    }
-  }, [currentStage, progress])
+    const timeout = setTimeout(() => {
+      setLogs(prev => [...prev, BOOT_LOGS[currentLogIndex]])
+      setCurrentLogIndex(prev => prev + 1)
+    }, 300)
 
-  const stage = BOOT_STAGES[currentStage]
-  const Icon = stage.icon
+    return () => clearTimeout(timeout)
+  }, [currentLogIndex, onComplete])
+
+  // Progress bar effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 1, 100))
+    }, 30) // ~3 seconds total
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isComplete ? 0 : 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="fixed inset-0 bg-white flex items-center justify-center overflow-hidden font-sans z-[9999]"
-    >
-      {/* Background Ambience (Matched to Enter Screen) */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-100/40 via-white to-white" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-      
-      {/* Floating Particles */}
-      <FloatingParticles />
+    <div className="fixed inset-0 bg-black text-green-500 font-mono flex flex-col items-center justify-center p-8 z-[9999] overflow-hidden">
+      {/* Background Matrix Effect (Subtle) */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none bg-[linear-gradient(rgba(18,16,14,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] bg-repeat" />
 
-      {/* Main content */}
-      <div className="relative z-10 text-center space-y-8 px-8">
-        {/* Logo with pulse - colored accent */}
-        <motion.div
-          className="inline-flex items-center justify-center w-24 h-24 rounded-full border-4 border-black"
-          style={{
-            background: 'linear-gradient(135deg, #3b82f6, #8b5cf6, #10b981)'
-          }}
-          animate={{
-            scale: [1, 1.05, 1],
-            boxShadow: [
-              '0 0 20px rgba(59, 130, 246, 0.3)',
-              '0 0 60px rgba(139, 92, 246, 0.5)',
-              '0 0 20px rgba(59, 130, 246, 0.3)'
-            ]
-          }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <Zap className="w-12 h-12 text-white" />
-        </motion.div>
-
-        {/* Title */}
-        <div>
-          <h1 className="text-4xl font-bold text-black mb-2">FTW-OS</h1>
-          <p className="text-gray-600 text-sm">Version 2.0.0</p>
-        </div>
-
-        {/* Boot stages */}
-        <div className="space-y-4 w-80">
-          <AnimatePresence mode="wait">
+      <div className="w-full max-w-2xl relative z-10 flex flex-col gap-12">
+        {/* Main Logo / Identity */}
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
             <motion.div
-              key={stage.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex items-center gap-3 text-black"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="w-24 h-24 border-4 border-green-500 rounded-lg flex items-center justify-center relative overflow-hidden bg-black/50"
             >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              >
-                <Icon className="w-5 h-5" style={{ color: stage.color }} />
-              </motion.div>
-              <span className="text-sm font-medium">{stage.label}</span>
+              <div className="absolute inset-0 bg-green-500/20 animate-pulse" />
+              <Terminal className="w-12 h-12 relative z-10" />
             </motion.div>
-          </AnimatePresence>
 
-          {/* Progress bar */}
-          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            {/* Morphing Orbits */}
             <motion.div
-              className="h-full"
-              style={{ 
-                width: `${stageProgress}%`,
-                background: `linear-gradient(90deg, ${stage.color}, ${BOOT_STAGES[(currentStage + 1) % BOOT_STAGES.length]?.color || stage.color})`
-              }}
-              transition={{ duration: 0.1 }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+              className="absolute -inset-4 border border-green-500/30 rounded-full border-dashed"
+            />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+              className="absolute -inset-8 border border-green-500/20 rounded-full"
             />
           </div>
 
-          {/* Stage indicators */}
-          <div className="flex justify-center gap-2">
-            {BOOT_STAGES.map((s, i) => (
-              <div
-                key={s.id}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i < currentStage
-                    ? 'bg-green-500'
-                    : i === currentStage
-                    ? 'scale-125'
-                    : 'bg-gray-300'
-                }`}
-                style={i === currentStage ? { backgroundColor: stage.color } : {}}
-              />
-            ))}
+          <div className="text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl font-bold tracking-tighter text-white mb-2"
+            >
+              FTW<span className="text-green-500">_OS</span>
+            </motion.h1>
+            <p className="text-xs text-green-500/60 tracking-widest uppercase">System Initialization v2.0</p>
           </div>
         </div>
 
-        {/* System info */}
-        <div className="text-xs text-gray-600 space-y-1">
-          <p>Build: {import.meta.env.VITE_BUILD_NUMBER || '20250114'}</p>
-          <p>
-            Electron {(typeof process !== 'undefined' && (process as any).versions?.electron) || 'N/A'} • 
-            Node {(typeof process !== 'undefined' && (process as any).versions?.node) || 'N/A'}
-          </p>
+        {/* Boot Sequence Visualization */}
+        <div className="grid grid-cols-4 gap-4">
+          {[Shield, Cpu, Database, Wifi].map((Icon, idx) => (
+            <div key={idx} className={`flex flex-col items-center gap-2 p-4 rounded bg-green-950/20 border border-green-900/50 transition-all duration-500 ${currentLogIndex > idx * 2 ? 'opacity-100 border-green-500/50' : 'opacity-30'}`}>
+              <Icon className="w-6 h-6" />
+              <div className="h-1 w-full bg-green-900/50 rounded-full overflow-hidden mt-2">
+                <motion.div
+                  className="h-full bg-green-500"
+                  initial={{ width: "0%" }}
+                  animate={{ width: currentLogIndex > idx * 2 ? "100%" : "0%" }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* System Logs */}
+        <div className="h-32 bg-black border border-green-900/50 rounded p-4 font-mono text-sm overflow-hidden relative">
+          <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-black to-transparent z-10" />
+          <div className="flex flex-col justify-end h-full gap-1">
+            <AnimatePresence>
+              {logs.slice(-5).map((log, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-2"
+                >
+                  <span className="text-green-700">{`>`}</span>
+                  <span>{log}</span>
+                  {i === logs.slice(-5).length - 1 && (
+                    <span className="w-2 h-4 bg-green-500 animate-pulse ml-1" />
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs uppercase tracking-wider text-green-500/60">
+            <span>Loading Core</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <div className="h-1 bg-green-900/30 w-full overflow-hidden">
+            <motion.div
+              className="h-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

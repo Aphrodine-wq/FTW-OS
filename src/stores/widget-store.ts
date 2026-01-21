@@ -23,9 +23,9 @@ const getDefaultLayout = (): WidgetConfig[] => {
   // Row heights: 4 units per row
   return [
     // Row 1 (y=0): Local AI | TaskList
-    { id: 'ollama-1', type: 'ollama', title: 'Local AI', layout: { x: 0, y: 0, w: 4, h: 4 }, visible: true },
+    { id: 'ollama-1', type: 'ollama', title: 'Local AI', layout: { x: 0, y: 0, w: 6, h: 5 }, visible: true },
     { id: 'tasks-1', type: 'project-status', title: 'Task List', layout: { x: 4, y: 0, w: 4, h: 8 }, visible: true }, // Spans 2 rows
-    
+
     // Row 2 (y=4): GitHub Activity
     { id: 'github-1', type: 'github', title: 'GitHub Activity', layout: { x: 8, y: 0, w: 4, h: 8 }, visible: true },
   ]
@@ -39,18 +39,18 @@ export const useWidgetStore = create<WidgetState>()(
       addWidget: (typeOrConfig) => set((state) => {
         const config = typeof typeOrConfig === 'string' ? { type: typeOrConfig } : typeOrConfig
         return {
-            widgets: [...state.widgets, { 
-                id: Math.random().toString(36).substr(2, 9), 
-                type: config.type, 
-                title: config.type, 
-                layout: { 
-                    x: config.x ?? 0, 
-                    y: config.y ?? Infinity, 
-                    w: config.w ?? 3, 
-                    h: config.h ?? 3 
-                }, 
-                visible: true 
-            }]
+          widgets: [...state.widgets, {
+            id: Math.random().toString(36).substr(2, 9),
+            type: config.type,
+            title: config.type,
+            layout: {
+              x: config.x ?? 0,
+              y: config.y ?? Infinity,
+              w: config.w ?? 3,
+              h: config.h ?? 3
+            },
+            visible: true
+          }]
         }
       }),
       removeWidget: (id) => set((state) => {

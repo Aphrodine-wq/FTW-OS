@@ -1,6 +1,6 @@
 @echo off
 REM ============================================
-REM   FTW-OS LAUNCHER
+REM   FTW-OS LAUNCHER (AUTO-UPDATE)
 REM   Development Mode Launcher
 REM   Double-click this file to run FTW-OS
 REM ============================================
@@ -10,7 +10,7 @@ title FTW-OS Launcher
 echo.
 echo ========================================
 echo   FTW-OS - FairTradeWorker OS
-echo   Development Mode Launcher
+echo   Status: Checking for updates...
 echo ========================================
 echo.
 
@@ -18,23 +18,30 @@ REM Get the directory where this batch file is located
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
 
-REM Check if we're in development mode (source files exist)
-if exist "src" if exist "electron" if exist "package.json" (
+REM ============================================
+REM   AUTO-UPDATE STEP
+REM ============================================
+echo [UPDATE] Pulling latest changes from git...
+git pull
+if errorlevel 1 (
+    echo.
+    echo [WARNING] Git pull failed. Continuing with local version...
+    echo.
+) else (
+    echo [UPDATE] Git pull complete.
+    echo.
+)
+
+REM ============================================
+REM   DEPENDENCY CHECK
+REM ============================================
+if exist "package.json" (
     echo [DEV MODE] Source files detected
-    echo.
-    echo Starting development launcher...
-    echo This will:
-    echo   - Watch for file changes
-    echo   - Auto-rebuild when files change
-    echo   - Launch Electron with latest build
-    echo.
-    echo Press Ctrl+C to stop
-    echo.
     
     REM Check if node_modules exists
     if not exist "node_modules" (
         echo.
-        echo Installing dependencies...
+        echo [SETUP] Installing dependencies...
         call npm install
         if errorlevel 1 (
             echo.
@@ -44,24 +51,18 @@ if exist "src" if exist "electron" if exist "package.json" (
         )
     )
     
+    echo.
+    echo [BOOT] Starting system...
+    echo.
+    
     REM Run the auto-update launcher
     call npm run dev:auto
     
     exit /b 0
 ) else (
     echo.
-    echo ========================================
-    echo   ERROR: Source files not found!
-    echo ========================================
-    echo.
-    echo This launcher requires:
-    echo   - src/ folder
-    echo   - electron/ folder
-    echo   - package.json
-    echo.
-    echo Please ensure you're running this from the
-    echo FTW-OS project root directory.
-    echo.
+    echo ERROR: package.json not found!
+    echo Please ensure you're running this from the project root.
     pause
     exit /b 1
 )

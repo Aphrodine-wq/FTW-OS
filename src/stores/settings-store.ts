@@ -30,7 +30,7 @@ interface SettingsStore {
       custom?: string // For crypto or other
     }
   }
-  
+
   // Actions
   setBusinessProfile: (profile: BusinessProfile) => void
   updatePreferences: (preferences: Partial<SettingsStore['preferences']>) => void
@@ -70,7 +70,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 
   setBusinessProfile: (profile) => set({ businessProfile: profile }),
-  
+
   updatePreferences: (newPreferences) => set((state) => ({
     preferences: { ...state.preferences, ...newPreferences }
   })),
@@ -78,16 +78,16 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   updateIntegrations: (newIntegrations) => set((state) => ({
     integrations: { ...state.integrations, ...newIntegrations }
   })),
-  
+
   loadSettings: async () => {
     try {
       // Load from Electron Store (File System)
       const saved = await window.ipcRenderer.invoke('db:get-settings')
       if (saved) {
         set({
-            businessProfile: saved.businessProfile || null,
-            preferences: { ...get().preferences, ...saved.preferences },
-            integrations: { ...get().integrations, ...saved.integrations }
+          businessProfile: saved.businessProfile || null,
+          preferences: { ...get().preferences, ...saved.preferences },
+          integrations: { ...get().integrations, ...saved.integrations }
         })
       } else {
         // Fallback to localStorage if migration needed
@@ -100,10 +100,24 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         }
       }
     } catch (error) {
-      console.error('Failed to load settings:', error)
+      console.error('Failed to load settings from backend, falling back to local storage:', error)
+      // Fallback to localStorage on backend failure
+      const local = localStorage.getItem('invoiceforge-settings')
+      if (local) {
+        try {
+          const parsed = JSON.parse(local)
+          set({
+            businessProfile: parsed.businessProfile || null,
+            preferences: { ...get().preferences, ...parsed.preferences },
+            integrations: { ...get().integrations, ...parsed.integrations }
+          })
+        } catch (e) {
+          console.error('Failed to parse local settings:', e)
+        }
+      }
     }
   },
-  
+
   saveSettings: async () => {
     const state = get()
     const data = {
@@ -112,7 +126,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       integrations: state.integrations,
     }
     // Save to Electron Store
-    await window.ipcRenderer.invoke('db:save-settings', data)
+    try {
+      await window.ipcRenderer.invoke('db:save-settings', data)
+    } catch (error) {
+      console.error('Failed to save to Electron store:', error)
+    }
     // Backup to localStorage
     localStorage.setItem('invoiceforge-settings', JSON.stringify(data))
   },

@@ -62,9 +62,9 @@ export function RealGithubWidget({ id, onRemove }: RealGithubWidgetProps) {
     <div className="space-y-4">
       <div className="space-y-2">
         <label className={cn("text-xs font-medium", mode === 'glass' ? "text-white/70" : "text-gray-500")}>GitHub Username</label>
-        <Input 
-          value={username} 
-          onChange={(e) => setUsername(e.target.value)} 
+        <Input
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           placeholder="e.g. torvalds"
           className={cn(mode === 'glass' ? "bg-white/10 border-white/20 text-white" : "")}
         />
@@ -116,8 +116,9 @@ export function RealGithubWidget({ id, onRemove }: RealGithubWidgetProps) {
             </p>
           </div>
           <button
+            onClick={() => window.location.hash = '#/settings'}
             className={cn(
-              "text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors",
+              "text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer",
               mode === 'glass' ? "bg-white/10 hover:bg-white/20 text-white" : "bg-gray-900 hover:bg-gray-800 text-white"
             )}
           >
@@ -125,15 +126,15 @@ export function RealGithubWidget({ id, onRemove }: RealGithubWidgetProps) {
             Configure Now
           </button>
         </div>
-      </AppWidget>
+      </AppWidget >
     )
   }
 
   return (
-    <AppWidget 
-      title="GitHub Activity" 
-      icon={Github} 
-      isConfigured={configured} 
+    <AppWidget
+      title="GitHub Activity"
+      icon={Github}
+      isConfigured={configured}
       onRemove={onRemove}
       configContent={ConfigContent}
     >
