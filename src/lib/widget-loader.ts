@@ -45,9 +45,6 @@ const WIDGET_IMPORTS: Record<string, () => Promise<{ default: ComponentType<any>
   
   // Revolutionary Widgets
   'neural-flow': () => import('@/components/widgets/revolutionary/NeuralFlowWidget').then(m => ({ default: m.NeuralFlowWidget })),
-  
-  // Dev Modules (as widgets)
-  'trae-coder': () => import('@/components/modules/dev/TraeCoder').then(m => ({ default: m.TraeCoder })),
 }
 
 // Widget preload cache

@@ -84,6 +84,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               Sign In
             </button>
 
+            <div className="my-4 flex items-center gap-4">
+              <div className="h-px bg-slate-200 flex-1" />
+              <span className="text-xs text-slate-400 font-medium">OR</span>
+              <div className="h-px bg-slate-200 flex-1" />
+            </div>
+
+            <button
+              onClick={onClose}
+              className="w-full py-3 bg-[#24292F] hover:bg-[#24292F]/90 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            >
+              <Github className="h-5 w-5" />
+              Continue with GitHub
+            </button>
+
             <p className="text-center text-xs text-slate-400 mt-4">
               Click anywhere to bypass (dev mode)
             </p>

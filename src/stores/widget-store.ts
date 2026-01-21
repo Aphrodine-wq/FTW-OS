@@ -22,19 +22,12 @@ const getDailyLayout = (dayIndex?: number): WidgetConfig[] => {
   // Default Dashboard Layout - 3 Column Grid (12 cols total, 4 cols each)
   // Row heights: 4 units per row
   return [
-    // Row 1 (y=0): Local AI | TaskList | SoundCloud
+    // Row 1 (y=0): Local AI | TaskList
     { id: 'ollama-1', type: 'ollama', title: 'Local AI', layout: { x: 0, y: 0, w: 4, h: 4 }, visible: true },
     { id: 'tasks-1', type: 'project-status', title: 'Task List', layout: { x: 4, y: 0, w: 4, h: 8 }, visible: true }, // Spans 2 rows
-    { id: 'soundcloud-1', type: 'soundcloud', title: 'SoundCloud', layout: { x: 8, y: 0, w: 4, h: 4 }, visible: true },
     
-    // Row 2 (y=4): Caffeine | (TaskList continues) | GitHub
-    { id: 'caffeine-1', type: 'caffeine', title: 'Caffeine Tracker', layout: { x: 0, y: 4, w: 4, h: 4 }, visible: true },
-    // TaskList continues from row 1 (x: 4, y: 0, h: 8)
-    { id: 'github-1', type: 'github', title: 'GitHub Activity', layout: { x: 8, y: 4, w: 4, h: 8 }, visible: true }, // Spans 2 rows
-    
-    // Row 3 (y=8): Network (spans 2 cols) | (GitHub continues)
-    { id: 'net-vis-1', type: 'net-vis', title: 'Network Monitor', layout: { x: 0, y: 8, w: 8, h: 4 }, visible: true }, // Spans 2 columns
-    // GitHub continues from row 2 (x: 8, y: 4, h: 8)
+    // Row 2 (y=4): GitHub Activity
+    { id: 'github-1', type: 'github', title: 'GitHub Activity', layout: { x: 8, y: 0, w: 4, h: 8 }, visible: true },
   ]
 }
 

@@ -3,7 +3,8 @@ import { create } from 'zustand'
 // Define which keys are sensitive and should be in Vault
 const SENSITIVE_KEYS = [
     'openaiApiKey', 'anthropicApiKey', 'githubToken', 
-    'steamApiKey', 'spotifyClientSecret', 'soundcloudClientSecret'
+    'steamApiKey', 'spotifyClientSecret', 'soundcloudClientSecret',
+    'googleClientId', 'googleClientSecret'
 ] as const
 
 type SensitiveKey = typeof SENSITIVE_KEYS[number]

@@ -31,11 +31,21 @@ export default defineConfig({
     minify: 'esbuild', // Faster minification
     target: 'esnext',
     chunkSizeWarningLimit: 500, // Lower limit for better splitting
+    // Ensure Monaco Editor is handled properly - don't break its internal structure
+    commonjsOptions: {
+      // Monaco Editor uses CommonJS internally - ensure proper handling
+      include: [/monaco-editor/, /node_modules/],
+      transformMixedEsModules: true
+    },
     rollupOptions: {
+      // Externalize Monaco Editor to prevent bundling issues
+      // Monaco will be loaded from CDN instead
+      external: ['monaco-editor'],
       output: {
         // Simplified chunk splitting - prioritize stability over granular splitting
         // Group related dependencies together to avoid cross-chunk issues
-        manualChunks: (id) => {
+        // Enhanced with getModuleInfo to detect transitive React dependencies
+        manualChunks: (id, { getModuleInfo }) => {
           if (id.includes('node_modules')) {
             // SIMPLIFIED: Bundle ALL React ecosystem together
             // This includes react, react-dom, scheduler, react-query, qs, and ALL dependencies
@@ -47,48 +57,83 @@ export default defineConfig({
                          !id.includes('qrcode') && 
                          !id.includes('request')
             
+            // Bundle ALL React ecosystem together to avoid "React is undefined" errors
+            // This includes react, react-dom, scheduler, react-query, and ALL React-dependent libraries
+            // IMPORTANT: All libraries that use React must be in this chunk
+            // This comprehensive check ensures no React-dependent code ends up in vendor-other
+            
+            // Direct React dependencies
             if (id.includes('react') || 
                 id.includes('react-dom') || 
                 id.includes('scheduler') ||
                 id.includes('@tanstack') ||
+                id.includes('@radix-ui') ||  // Radix UI depends on React
+                id.includes('framer-motion') ||  // framer-motion depends on React
+                id.includes('lucide-react') ||  // lucide-react depends on React
+                id.includes('react-grid-layout') ||  // react-grid-layout depends on React
+                id.includes('react-resizable') ||  // react-resizable depends on React
+                id.includes('react-markdown') ||  // react-markdown depends on React
+                id.includes('react-big-calendar') ||  // react-big-calendar depends on React
+                id.includes('@hello-pangea/dnd') ||  // drag and drop depends on React
+                id.includes('@monaco-editor/react') ||  // Monaco React wrapper depends on React
+                id.includes('recharts') ||  // recharts depends on React
+                id.includes('cmdk') ||  // cmdk may have React dependencies
+                id.includes('tailwindcss-animate') ||  // tailwindcss-animate may be used with React
                 isQs) {
               return 'vendor-react'
             }
             
-            // Monaco Editor - ONLY monaco-editor core
-            // We use Monaco directly, NOT the React wrapper (@monaco-editor/react)
-            // The React wrapper is not imported anywhere, so it won't be bundled
-            if (id.includes('monaco-editor') && !id.includes('@monaco-editor')) {
-              return 'vendor-monaco'
+            // Check for any library that might transitively depend on React
+            // This catches libraries that import from 'react' but don't have 'react' in their name
+            // We check the path structure to identify node_modules packages
+            const nodeModulesIndex = id.indexOf('node_modules')
+            if (nodeModulesIndex > -1) {
+              const afterNodeModules = id.substring(nodeModulesIndex + 'node_modules'.length)
+              const packagePath = afterNodeModules.split(/[\/\\]/).filter(Boolean)
+              
+              // Check if this package might have React as a peer dependency
+              // Common patterns: UI libraries, component libraries, etc.
+              // We'll be conservative and include anything that looks like it might use React
+              const suspiciousPackages = [
+                'cmdk', 'vaul', 'sonner', 'embla', 'ariakit', 
+                'headlessui', 'react-aria', 'react-stately'
+              ]
+              
+              if (packagePath.length > 0 && suspiciousPackages.some(pkg => packagePath[0] === pkg)) {
+                return 'vendor-react'
+              }
+              
+              // Check if this module imports from React by examining its dependencies
+              // This catches transitive dependencies that use React
+              try {
+                const moduleInfo = getModuleInfo(id)
+                if (moduleInfo) {
+                  // Check if this module's importedIds include React
+                  const importedIds = moduleInfo.importedIds || []
+                  const hasReactImport = importedIds.some(importId => 
+                    importId.includes('react') || 
+                    importId.includes('react-dom') ||
+                    importId.includes('react/jsx-runtime')
+                  )
+                  
+                  if (hasReactImport) {
+                    return 'vendor-react'
+                  }
+                }
+              } catch (e) {
+                // If we can't get module info, continue with normal logic
+              }
             }
             
-            // Radix UI - split by component for better caching
-            if (id.includes('@radix-ui')) {
-              const match = id.match(/@radix-ui\/([^/]+)/)
-              if (match) {
-                return `vendor-radix-${match[1]}`
-              }
-              return 'vendor-radix'
-            }
+            // Monaco Editor is now externalized - loaded from CDN
+            // No need to bundle it, which prevents initialization order issues
+            // Skip Monaco in chunk splitting since it's external
             
             // Heavy libraries - separate chunks
             if (id.includes('puppeteer')) {
               return 'vendor-puppeteer'
             }
-            
-            // UI libraries
-            if (id.includes('framer-motion')) {
-              return 'vendor-framer'
-            }
-            if (id.includes('lucide-react')) {
-              return 'vendor-lucide'
-            }
-            if (id.includes('recharts')) {
-              return 'vendor-recharts'
-            }
-            if (id.includes('react-grid-layout') || id.includes('react-resizable')) {
-              return 'vendor-grid'
-            }
+            // react-grid-layout and react-resizable are now in vendor-react
             
             // Data/State management
             if (id.includes('zustand')) {
@@ -144,25 +189,12 @@ export default defineConfig({
               return 'vendor-github'
             }
             
-            // Markdown/Content
-            if (id.includes('react-markdown') || id.includes('dompurify')) {
+            // Markdown/Content (react-markdown is now in vendor-react)
+            if (id.includes('dompurify')) {
               return 'vendor-markdown'
             }
             
-            // Calendar/Date
-            if (id.includes('react-big-calendar')) {
-              return 'vendor-calendar'
-            }
-            
-            // Drag and drop
-            if (id.includes('@hello-pangea/dnd')) {
-              return 'vendor-dnd'
-            }
-            
-            // Command palette
-            if (id.includes('cmdk')) {
-              return 'vendor-cmdk'
-            }
+            // react-big-calendar, @hello-pangea/dnd, and cmdk are now in vendor-react
             
             // Excel/Spreadsheet
             if (id.includes('exceljs')) {

@@ -10,7 +10,7 @@ import { isSupabaseConfigured } from '@/services/supabase'
 type AuthMode = 'login' | 'register' | 'forgot-password'
 
 export function LoginScreen() {
-  const { login, loginAsGuest, loginWithEmail, registerWithEmail, resetPassword, checkSession } = useAuthStore()
+  const { login, loginWithGoogleOAuth, handleGoogleCallback, loginAsGuest, loginWithEmail, registerWithEmail, resetPassword, checkSession } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [isConfigured, setIsConfigured] = useState(true)
   const [authMode, setAuthMode] = useState<AuthMode>('login')
@@ -25,14 +25,44 @@ export function LoginScreen() {
 
   useEffect(() => {
     setIsConfigured(isSupabaseConfigured())
-    // Check if we were redirected back from Google
-    checkSession()
+    
+    // Check if we're returning from Google OAuth callback
+    const currentUrl = window.location.href
+    if (currentUrl.includes('/auth/callback') || currentUrl.includes('code=')) {
+      setIsLoading(true)
+      handleGoogleCallback(currentUrl)
+        .then((result) => {
+          if (result.error) {
+            setError(result.error)
+            setIsLoading(false)
+          } else {
+            // Success - user will be redirected or component will update
+            setSuccess('Successfully authenticated with Google!')
+          }
+        })
+        .catch((err) => {
+          setError(err.message || 'Authentication failed')
+          setIsLoading(false)
+        })
+    } else {
+      // Check for existing session
+      checkSession()
+    }
   }, [])
 
   const handleGoogleLogin = async () => {
-    if (!isConfigured) return
+    setError('')
+    setSuccess('')
     setIsLoading(true)
-    await login()
+    
+    // Use new Google OAuth-only system (uses credentials from vault)
+    const result = await loginWithGoogleOAuth()
+    
+    if (result.error) {
+      setError(result.error)
+      setIsLoading(false)
+    }
+    // If successful, user will be redirected to Google
     // Loading state persists until redirect happens
   }
 

@@ -209,17 +209,9 @@ function DashboardInner({ setActiveTab, stores }: DashboardProps & { stores: Sto
     const actualType = WIDGET_ALIASES[type] || type
     const LazyComponent = getWidgetComponent(actualType)
     
-    if (type === 'net-vis' || type === 'quick-roi' || type === 'day-stream' || type === 'system-resources' || type === 'ollama') {
+    if (type === 'ollama') {
         return (
           <div className="h-full overflow-hidden">
-            <LazyComponent id={id} />
-          </div>
-        )
-    }
-    
-    if (type === 'crypto-matrix' || type === 'weather-old' || type === 'caffeine') {
-        return (
-          <div className="p-4 h-full overflow-hidden">
             <LazyComponent id={id} />
           </div>
         )
@@ -269,112 +261,101 @@ function DashboardInner({ setActiveTab, stores }: DashboardProps & { stores: Sto
       </div>
 
       <div className={cn("px-6 transition-all duration-300 relative z-10")} ref={containerRef}>
-        <Tabs value={currentDayTab} onValueChange={setCurrentDayTab} className="w-full">
-            <div className="flex justify-between items-center mb-6 pl-2">
-                <TabsList className="bg-white/10 backdrop-blur-md border border-white/10">
-                    {['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].map((day) => (
-                        <TabsTrigger 
-                            key={day} 
-                            value={day}
-                            className="uppercase text-[10px] font-bold w-12 data-[state=active]:bg-[var(--accent-primary)] data-[state=active]:text-white"
-                        >
-                            {day}
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-                
-                <Button 
-                    variant={layoutMode === 'edit' ? "destructive" : "outline"} 
-                    size="sm" 
-                    onClick={() => setLayoutMode(layoutMode === 'edit' ? 'locked' : 'edit')}
-                    className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-xs"
-                >
-                    <LayoutGrid className="h-3 w-3" />
-                    {layoutMode === 'edit' ? 'Done' : 'Edit'}
-                </Button>
+        <div className="flex justify-between items-center mb-6 pl-2">
+            <div className="flex flex-col">
+                <h1 className="text-3xl font-black tracking-tighter text-white">Dashboard</h1>
+                <p className="text-sm text-slate-400">Welcome back to FTW-OS</p>
             </div>
+            
+            <Button 
+                variant={layoutMode === 'edit' ? "destructive" : "outline"} 
+                size="sm" 
+                onClick={() => setLayoutMode(layoutMode === 'edit' ? 'locked' : 'edit')}
+                className="gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-xs"
+            >
+                <LayoutGrid className="h-3 w-3" />
+                {layoutMode === 'edit' ? 'Done' : 'Edit'}
+            </Button>
+        </div>
 
-            <TabsContent value={currentDayTab} className="mt-0">
-                <div className={cn("transition-all duration-300", layoutMode === 'edit' && "ring-2 ring-dashed ring-amber-500/30 rounded-xl bg-amber-500/5 py-4")}>
-                    <ResponsiveAny
-                    className="layout"
-                    layouts={layouts}
-                    width={width}
-                    breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                    cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-                    rowHeight={60}
-                    isDraggable={layoutMode === 'edit'}
-                    isResizable={layoutMode === 'edit'}
-                    resizeHandles={['se', 'sw', 'ne', 'nw', 's', 'e', 'n', 'w']}
-                    onLayoutChange={onLayoutChange}
-                    margin={[16, 16]}
-                    compactType="vertical"
-                    preventCollision={false}
-                    useCSSTransforms={true}
-                    >
-                    {widgets.map((w) => (
-                        <div 
-                          key={w.id} 
-                          className={cn(
-                            "relative group transition-opacity",
-                            layoutMode === 'edit' ? "opacity-100" : "hover:z-10"
-                          )}
-                          style={{
-                            willChange: 'transform',
-                            transform: 'translate3d(0, 0, 0)',
-                            backfaceVisibility: 'hidden',
-                            WebkitBackfaceVisibility: 'hidden',
-                            perspective: 1000,
-                            WebkitPerspective: 1000
-                          }}
-                        >
-                        
-                        <div className="absolute top-2 right-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm">
-                                        <MoreHorizontal className="h-3 w-3" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => removeWidget(w.id)}>
-                                        <Trash2 className="mr-2 h-3 w-3" /> Remove Widget
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-
-                        {layoutMode === 'edit' && (
-                            <div className="drag-handle absolute inset-x-0 top-0 h-6 bg-amber-500/20 z-40 cursor-move rounded-t-lg flex items-center justify-center group">
-                                <div className="w-8 h-1 bg-amber-500/50 rounded-full group-hover:bg-amber-500 transition-colors" />
-                            </div>
-                        )}
-                        
-                        <Suspense fallback={<WidgetSkeleton />}>
-                          {renderWidgetContent(w.type, w.id)}
-                        </Suspense>
-                        </div>
-                    ))}
-                    </ResponsiveAny>
+        <div className={cn("transition-all duration-300", layoutMode === 'edit' && "ring-2 ring-dashed ring-amber-500/30 rounded-xl bg-amber-500/5 py-4")}>
+            <ResponsiveAny
+            className="layout"
+            layouts={layouts}
+            width={width}
+            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+            cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+            rowHeight={60}
+            isDraggable={layoutMode === 'edit'}
+            isResizable={layoutMode === 'edit'}
+            resizeHandles={['se', 'sw', 'ne', 'nw', 's', 'e', 'n', 'w']}
+            onLayoutChange={onLayoutChange}
+            margin={[16, 16]}
+            compactType="vertical"
+            preventCollision={false}
+            useCSSTransforms={true}
+            >
+            {widgets.map((w) => (
+                <div 
+                  key={w.id} 
+                  className={cn(
+                    "relative group transition-opacity",
+                    layoutMode === 'edit' ? "opacity-100" : "hover:z-10"
+                  )}
+                  style={{
+                    willChange: 'transform',
+                    transform: 'translate3d(0, 0, 0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    perspective: 1000,
+                    WebkitPerspective: 1000
+                  }}
+                >
+                
+                <div className="absolute top-2 right-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm">
+                                <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => removeWidget(w.id)}>
+                                <Trash2 className="mr-2 h-3 w-3" /> Remove Widget
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
-                {/* Add Widget Button - 2x3 at bottom */}
-                <div className="mt-6 flex justify-center">
-                    <button
-                        onClick={() => setShowArmory(true)}
-                        className="w-full max-w-md h-[180px] border-2 border-dashed border-white/20 hover:border-blue-500/50 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:bg-blue-500/5 group"
-                    >
-                        <div className="p-4 rounded-full bg-white/5 group-hover:bg-blue-500/20 transition-colors">
-                            <Plus className="h-8 w-8 text-slate-400 group-hover:text-blue-400 transition-colors" />
-                        </div>
-                        <div className="text-center">
-                            <p className="text-lg font-semibold text-slate-300 group-hover:text-white transition-colors">Add Widget</p>
-                            <p className="text-sm text-slate-500 group-hover:text-slate-400 transition-colors">Customize your workspace</p>
-                        </div>
-                    </button>
+                {layoutMode === 'edit' && (
+                    <div className="drag-handle absolute inset-x-0 top-0 h-6 bg-amber-500/20 z-40 cursor-move rounded-t-lg flex items-center justify-center group">
+                        <div className="w-8 h-1 bg-amber-500/50 rounded-full group-hover:bg-amber-500 transition-colors" />
+                    </div>
+                )}
+                
+                <Suspense fallback={<WidgetSkeleton />}>
+                  {renderWidgetContent(w.type, w.id)}
+                </Suspense>
                 </div>
-            </TabsContent>
-        </Tabs>
+            ))}
+            </ResponsiveAny>
+        </div>
+
+        {/* Add Widget Button - 2x3 at bottom */}
+        <div className="mt-6 flex justify-center">
+            <button
+                onClick={() => setShowArmory(true)}
+                className="w-full max-w-md h-[180px] border-2 border-dashed border-white/20 hover:border-blue-500/50 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:bg-blue-500/5 group"
+            >
+                <div className="p-4 rounded-full bg-white/5 group-hover:bg-blue-500/20 transition-colors">
+                    <Plus className="h-8 w-8 text-slate-400 group-hover:text-blue-400 transition-colors" />
+                </div>
+                <div className="text-center">
+                    <p className="text-lg font-semibold text-slate-300 group-hover:text-white transition-colors">Add Widget</p>
+                    <p className="text-sm text-slate-500 group-hover:text-slate-400 transition-colors">Customize your workspace</p>
+                </div>
+            </button>
+        </div>
       </div>
 
       <Suspense fallback={null}>

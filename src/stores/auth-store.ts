@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { supabase } from '@/services/supabase'
 import { injectSeedData } from '@/lib/seed-data'
 import { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import { googleOAuth, GoogleUser, GoogleTokens } from '@/services/google-oauth'
 
 interface User {
   id: string
@@ -15,7 +16,10 @@ interface User {
 interface AuthState {
   isAuthenticated: boolean
   user: User | null
+  tokens: GoogleTokens | null
   login: () => void
+  loginWithGoogleOAuth: () => Promise<{ error?: string }>
+  handleGoogleCallback: (url: string) => Promise<{ error?: string }>
   loginAsGuest: () => void
   loginWithEmail: (email: string, password: string) => Promise<{ error?: string }>
   registerWithEmail: (email: string, password: string, name: string) => Promise<{ error?: string }>
@@ -30,6 +34,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       isAuthenticated: false,
       user: null,
+      tokens: null,
       initializeListener: () => {
          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
             if (event === 'SIGNED_OUT') {
@@ -53,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
          return () => subscription.unsubscribe()
       },
       login: async () => {
-        // Trigger Google Login
+        // Trigger Google Login via Supabase (legacy)
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -64,6 +69,39 @@ export const useAuthStore = create<AuthState>()(
             },
         })
         if (error) console.error('Login error:', error)
+      },
+      loginWithGoogleOAuth: async () => {
+        // New Google OAuth-only flow using credentials from vault
+        const result = await googleOAuth.login()
+        if (!result.success) {
+          return { error: result.error }
+        }
+        return {}
+      },
+      handleGoogleCallback: async (url: string) => {
+        // Handle OAuth callback and set user session
+        const result = await googleOAuth.handleCallback(url)
+        if (!result.success || !result.user) {
+          return { error: result.error || 'Authentication failed' }
+        }
+
+        const googleUser = result.user
+        set({
+          isAuthenticated: true,
+          user: {
+            id: googleUser.id,
+            name: googleUser.name,
+            email: googleUser.email,
+            avatar: googleUser.picture,
+            role: 'admin'
+          },
+          tokens: result.tokens || null
+        })
+
+        // Inject seed data for usable state
+        injectSeedData().catch(err => console.error("Failed to inject seed data:", err))
+
+        return {}
       },
       loginAsGuest: () => {
         set({
@@ -81,7 +119,7 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: async () => {
         await supabase.auth.signOut()
-        set({ isAuthenticated: false, user: null })
+        set({ isAuthenticated: false, user: null, tokens: null })
       },
       loginWithEmail: async (email: string, password: string) => {
         try {

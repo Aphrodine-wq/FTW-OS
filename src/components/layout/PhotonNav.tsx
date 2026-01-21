@@ -181,9 +181,9 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
       <motion.div
         initial={false}
         animate={{
-          width: isExpanded ? 1000 : 280,
-          height: isExpanded ? 520 : 64,
-          borderRadius: isExpanded ? 28 : 9999
+          width: isExpanded ? 800 : 280,
+          height: isExpanded ? 400 : 56,
+          borderRadius: isExpanded ? 24 : 9999
         }}
         transition={{ type: "spring", stiffness: 350, damping: 30 }}
         onMouseEnter={() => setIsExpanded(true)}

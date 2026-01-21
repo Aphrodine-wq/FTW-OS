@@ -65,6 +65,8 @@ export function SettingsPanel() {
     spotifyClientSecret: '',
     openaiApiKey: '',
     anthropicApiKey: '',
+    googleClientId: '',
+    googleClientSecret: '',
     ollamaEndpoint: 'http://localhost:11434'
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -107,7 +109,7 @@ export function SettingsPanel() {
       e.preventDefault()
       
       // 1. Identify and Save Sensitive Keys to Vault
-      const sensitiveKeys = ['openaiApiKey', 'anthropicApiKey', 'githubToken', 'steamApiKey', 'soundcloudClientSecret', 'spotifyClientSecret']
+      const sensitiveKeys = ['openaiApiKey', 'anthropicApiKey', 'githubToken', 'steamApiKey', 'soundcloudClientSecret', 'spotifyClientSecret', 'googleClientId', 'googleClientSecret']
       
       for (const key of sensitiveKeys) {
           // Only update if value is present (allows clearing if empty string passed, though logic might need refinement for explicit clear)
@@ -768,6 +770,63 @@ export function SettingsPanel() {
                       placeholder="Your SoundCloud username"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-medium text-lg border-b pb-2 flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-blue-500" />
+                    Google OAuth
+                  </h3>
+                  <div className="p-4 bg-muted/20 border rounded-lg text-sm">
+                    <p className="font-medium mb-1">How to get Google OAuth credentials?</p>
+                    <p className="text-muted-foreground">
+                      Create a project in{' '}
+                      <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                        Google Cloud Console
+                      </a>
+                      {' '}and create OAuth 2.0 Client ID credentials
+                    </p>
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      Client ID
+                      <Lock className="h-3 w-3 text-muted-foreground" />
+                    </label>
+                    <input
+                      value={integrationData.googleClientId || ''}
+                      onChange={(e) => setIntegrationData(prev => ({ ...prev, googleClientId: e.target.value }))}
+                      className="w-full p-2 border rounded-md"
+                      placeholder="xxxxx.apps.googleusercontent.com"
+                    />
+                    <p className="text-xs text-muted-foreground">Your Google OAuth Client ID</p>
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      Client Secret
+                      <Lock className="h-3 w-3 text-muted-foreground" />
+                    </label>
+                    <input
+                      value={integrationData.googleClientSecret || ''}
+                      onChange={(e) => setIntegrationData(prev => ({ ...prev, googleClientSecret: e.target.value }))}
+                      className="w-full p-2 border rounded-md"
+                      type="password"
+                      placeholder="GOCSPX-xxxxxxxxxxxx"
+                    />
+                    <p className="text-xs text-muted-foreground">Stored securely in encrypted vault 🔒</p>
+                  </div>
+                  {integrationData.googleClientId && integrationData.googleClientSecret && (
+                    <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-600">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-500/20 rounded-full">
+                          <Lock className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <span className="block text-sm font-bold">Google OAuth Configured</span>
+                          <span className="text-xs opacity-80">Credentials secured in FTW-OS Vault</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4">

@@ -76,45 +76,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       transition={{ duration: 0.5 }}
       className="fixed inset-0 bg-white flex items-center justify-center overflow-hidden font-sans z-[9999]"
     >
-      {/* Animated background grid - light gray on white */}
-      <div className="absolute inset-0 opacity-10">
-        <div 
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='60' height='60' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 10 0 L 0 0 0 10' fill='none' stroke='%23000' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23grid)'/%3E%3C/svg%3E")`,
-            animation: 'pulse 2s ease-in-out infinite'
-          }}
-        />
-      </div>
-
-      {/* Particle system - colored accents */}
-      <div className="absolute inset-0">
-        {[...Array(20)].map((_, i) => {
-          const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4', '#ec4899']
-          const color = colors[i % colors.length]
-          return (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 rounded-full"
-            style={{ backgroundColor: color }}
-            initial={{ 
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-              opacity: 0 
-            }}
-            animate={{
-              y: [null, Math.random() * window.innerHeight],
-              opacity: [0, 1, 0]
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2
-            }}
-          />
-          )
-        })}
-      </div>
+      {/* Background Ambience (Matched to Enter Screen) */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-100/40 via-white to-white" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      
+      {/* Floating Particles */}
+      <FloatingParticles />
 
       {/* Main content */}
       <div className="relative z-10 text-center space-y-8 px-8">

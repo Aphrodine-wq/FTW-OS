@@ -66,7 +66,6 @@ export const NewsletterStudio = React.lazy(() => import('@/components/modules/ma
 
 // Lazy Load Development Modules
 export const DevHQ = React.lazy(() => import('@/components/modules/dev/DevHQ').then(m => ({ default: m.DevHQ })))
-export const TraeCoder = React.lazy(() => import('@/components/modules/dev/TraeCoder').then(m => ({ default: m.TraeCoder })))
 
 // Lazy Load AI Modules
 export const ResearchAgent = React.lazy(() => import('@/components/modules/ai/ResearchAgent').then(m => ({ default: m.ResearchAgent })))

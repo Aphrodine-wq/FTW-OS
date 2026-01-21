@@ -1,9 +1,9 @@
 /**
  * Monaco Editor Configuration for Electron
- * Ensures Monaco Editor loads correctly in Electron environment
+ * Monaco Editor is now loaded from CDN (externalized) to prevent bundling issues
  */
 
-// Initialize Monaco Editor loader early
+// Initialize Monaco Editor - now uses global window.monaco from CDN
 let monacoInitialized = false
 let monacoInitPromise: Promise<void> | null = null
 
@@ -18,85 +18,44 @@ export async function initializeMonaco(): Promise<void> {
   
   monacoInitPromise = (async () => {
     try {
-      console.log('[Monaco] Starting initialization...')
+      console.log('[Monaco] Starting initialization from CDN...')
       
-      // CRITICAL: Load monaco-editor core FIRST and ensure it's available globally
-      // The React wrapper depends on the global `monaco` object being available
-      const monacoCore = await import('monaco-editor')
+      // CRITICAL: Monaco is now loaded from CDN in index.html
+      // Wait for it to be available globally as window.monaco
+      let attempts = 0
+      const maxAttempts = 50 // 5 seconds max wait
       
-      // Verify core is loaded
-      if (!monacoCore || !monacoCore.editor) {
-        throw new Error('Monaco Editor core failed to load - editor object not available')
-      }
-      
-      // Make Monaco available globally (some libraries expect this)
-      if (typeof window !== 'undefined' && !(window as any).monaco) {
-        (window as any).monaco = monacoCore
-      }
-      
-      console.log('[Monaco] Core loaded, editor API available:', !!monacoCore.editor)
-      
-      // Configure Monaco workers directly - NO React wrapper needed
-      const isElectron = typeof window !== 'undefined' && window.process?.type === 'renderer'
-      
-      if (isElectron) {
-        // For Electron, configure worker paths using MonacoEnvironment
-        const currentPath = window.location.pathname
-        const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'))
-        
-        // Use CDN for workers in Electron (most reliable)
-        const workerPath = 'https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs'
-        console.log('[Monaco] Configuring Electron worker path (CDN):', workerPath)
-        
-        // Set up Monaco environment for workers
-        ;(self as any).MonacoEnvironment = {
-          getWorkerUrl: function (_moduleId: string, label: string) {
-            if (label === 'json') {
-              return `${workerPath}/worker/json.worker.js`
-            }
-            if (label === 'css' || label === 'scss' || label === 'less') {
-              return `${workerPath}/worker/css.worker.js`
-            }
-            if (label === 'html' || label === 'handlebars' || label === 'razor') {
-              return `${workerPath}/worker/html.worker.js`
-            }
-            if (label === 'typescript' || label === 'javascript') {
-              return `${workerPath}/worker/ts.worker.js`
-            }
-            return `${workerPath}/worker/editor.worker.js`
+      while (attempts < maxAttempts) {
+        if (typeof window !== 'undefined' && (window as any).monaco) {
+          const monaco = (window as any).monaco
+          
+          // Verify Monaco is properly loaded
+          if (monaco && monaco.editor && typeof monaco.editor.create === 'function') {
+            console.log('[Monaco] Loaded from CDN, editor API available:', !!monaco.editor)
+            monacoInitialized = true
+            return
           }
         }
-      } else {
-        // For web development - use local workers
-        const workerPath = '/node_modules/monaco-editor/min/vs'
-        ;(self as any).MonacoEnvironment = {
-          getWorkerUrl: function (_moduleId: string, label: string) {
-            if (label === 'json') {
-              return `${workerPath}/worker/json.worker.js`
-            }
-            if (label === 'css' || label === 'scss' || label === 'less') {
-              return `${workerPath}/worker/css.worker.js`
-            }
-            if (label === 'html' || label === 'handlebars' || label === 'razor') {
-              return `${workerPath}/worker/html.worker.js`
-            }
-            if (label === 'typescript' || label === 'javascript') {
-              return `${workerPath}/worker/ts.worker.js`
-            }
-            return `${workerPath}/worker/editor.worker.js`
-          }
-        }
+        
+        // Wait a bit before checking again
+        await new Promise(resolve => setTimeout(resolve, 100))
+        attempts++
       }
       
-      console.log('[Monaco] Worker configuration complete')
+      throw new Error('Monaco Editor not available from CDN after waiting')
+      
+      // Worker configuration is handled by CDN loader in index.html
+      // The CDN loader automatically configures workers
+      console.log('[Monaco] Worker configuration handled by CDN loader')
       
       // Double-check that Monaco is available after init
-      if (!monacoCore.editor || typeof monacoCore.editor.create !== 'function') {
-        throw new Error('Monaco Editor core not properly initialized - create function not available')
+      const monaco = (window as any).monaco
+      if (!monaco || !monaco.editor || typeof monaco.editor.create !== 'function') {
+        throw new Error('Monaco Editor not properly loaded from CDN - create function not available')
       }
       
       monacoInitialized = true
-      console.log('[Monaco] Initialization completed successfully')
+      console.log('[Monaco] Initialization completed successfully from CDN')
     } catch (error) {
       console.error('[Monaco] Initialization failed:', error)
       monacoInitialized = false
@@ -108,13 +67,16 @@ export async function initializeMonaco(): Promise<void> {
   return monacoInitPromise
 }
 
-// Auto-initialize on module load if in browser
-if (typeof window !== 'undefined') {
-  // Initialize Monaco early, but don't block
-  initializeMonaco().catch((error) => {
-    console.warn('Monaco Editor pre-initialization failed:', error)
-  })
-}
+// CRITICAL: Do NOT auto-initialize on module load
+// This can cause circular dependency issues and initialization order problems
+// Monaco should be initialized explicitly when needed, not automatically
+// Auto-initialization is disabled to prevent "Cannot access before initialization" errors
+// if (typeof window !== 'undefined') {
+//   // Initialize Monaco early, but don't block
+//   initializeMonaco().catch((error) => {
+//     console.warn('Monaco Editor pre-initialization failed:', error)
+//   })
+// }
 
 /**
  * Verify that Monaco Editor is fully initialized and ready to use

@@ -22,6 +22,8 @@ interface SettingsStore {
     spotifyClientSecret?: string
     openaiApiKey?: string
     anthropicApiKey?: string
+    googleClientId?: string
+    googleClientSecret?: string
     paymentLinks?: {
       stripe?: string
       paypal?: string
@@ -58,6 +60,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     spotifyClientSecret: '',
     openaiApiKey: '',
     anthropicApiKey: '',
+    googleClientId: '',
+    googleClientSecret: '',
     paymentLinks: {
       stripe: '',
       paypal: '',

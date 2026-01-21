@@ -2,6 +2,17 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 
+// CRITICAL: Make React available globally before any chunks load
+// This ensures React is available to all chunks, preventing "React is undefined" errors
+// This is a fallback in case chunk loading order issues occur
+if (typeof window !== 'undefined') {
+  // @ts-ignore - Making React available globally for chunk compatibility
+  window.React = React
+  // Also make ReactDOM available for components that might need it
+  // @ts-ignore
+  window.ReactDOM = ReactDOM
+}
+
 // Debug logging
 console.log('[React] Initializing app...')
 console.log('[React] Root element:', document.getElementById('root'))
@@ -180,15 +191,17 @@ async function init() {
   const root = ReactDOM.createRoot(rootElement)
 
   try {
-    // Initialize Monaco Editor early (non-blocking)
-    // This ensures Monaco is ready when TraeCoder component loads
-    import('@/lib/monaco-config').then(({ initializeMonaco }) => {
-      initializeMonaco().catch((error) => {
-        console.warn('[React] Monaco Editor pre-initialization failed (non-critical):', error)
-      })
-    }).catch(() => {
-      // Ignore if Monaco config fails to load
-    })
+    // CRITICAL: Defer Monaco Editor initialization to prevent circular dependency issues
+    // Monaco initialization is now deferred until actually needed by components
+    // This prevents "Cannot access before initialization" errors
+    // Components that need Monaco should call initializeMonaco() explicitly
+    // import('@/lib/monaco-config').then(({ initializeMonaco }) => {
+    //   initializeMonaco().catch((error) => {
+    //     console.warn('[React] Monaco Editor pre-initialization failed (non-critical):', error)
+    //   })
+    // }).catch(() => {
+    //   // Ignore if Monaco config fails to load
+    // })
 
     // Dynamic import QueryClient first (no dependencies)
     console.log('[React] Importing QueryClient...')

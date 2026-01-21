@@ -198,9 +198,6 @@ const AppInner = ({ storeState }: { storeState: any }) => {
         <QuickCapture open={quickCaptureOpen} onOpenChange={setQuickCaptureOpen} />
         <NotificationCenter />
         <KeyboardShortcutsHelp open={shortcutsHelpOpen} onOpenChange={setShortcutsHelpOpen} />
-        {!focusMode && (
-          <FloatingActionButton onClick={() => setQuickCaptureOpen(true)} />
-        )}
       </Suspense>
     </div>
   )
