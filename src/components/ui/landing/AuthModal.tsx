@@ -5,7 +5,7 @@
 
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Mail, Lock } from 'lucide-react'
+import { X, Mail, Lock, Github } from 'lucide-react'
 
 interface AuthModalProps {
   isOpen: boolean

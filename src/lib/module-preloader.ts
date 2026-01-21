@@ -265,7 +265,6 @@ export function getModuleImport(moduleId: string): (() => Promise<any>) | null {
     ads: () => import('@/lib/lazy-modules').then(m => m.AdManager),
     newsletter: () => import('@/lib/lazy-modules').then(m => m.NewsletterStudio),
     dev: () => import('@/lib/lazy-modules').then(m => m.DevHQ),
-    trae: () => import('@/lib/lazy-modules').then(m => m.TraeCoder),
     research: () => import('@/lib/lazy-modules').then(m => m.ResearchAgent),
     voice: () => import('@/lib/lazy-modules').then(m => m.VoiceCommand),
     settings: () => import('@/lib/lazy-modules').then(m => m.SettingsPanel),

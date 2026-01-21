@@ -15,10 +15,10 @@ interface WidgetState {
   addWidget: (typeOrConfig: string | { type: string; x?: number; y?: number; w?: number; h?: number }) => void
   removeWidget: (id: string) => void
   updateLayout: (layout: any[]) => void
-  resetLayout: (dayIndex?: number) => void
+  resetLayout: () => void
 }
 
-const getDailyLayout = (dayIndex?: number): WidgetConfig[] => {
+const getDefaultLayout = (): WidgetConfig[] => {
   // Default Dashboard Layout - 3 Column Grid (12 cols total, 4 cols each)
   // Row heights: 4 units per row
   return [
@@ -34,7 +34,7 @@ const getDailyLayout = (dayIndex?: number): WidgetConfig[] => {
 export const useWidgetStore = create<WidgetState>()(
   persist(
     (set) => ({
-      widgets: getDailyLayout(),
+      widgets: getDefaultLayout(),
       availableWidgets: [], // Populated by registry later
       addWidget: (typeOrConfig) => set((state) => {
         const config = typeof typeOrConfig === 'string' ? { type: typeOrConfig } : typeOrConfig
@@ -68,8 +68,8 @@ export const useWidgetStore = create<WidgetState>()(
           })
         }
       }),
-      resetLayout: (dayIndex?: number) => set({ widgets: getDailyLayout(dayIndex) })
+      resetLayout: () => set({ widgets: getDefaultLayout() })
     }),
-    { name: 'fairtrade-widgets-v6' } // Version bump to force new 3-column layout
+    { name: 'fairtrade-widgets-v7' } // Version bump to force new layout
   )
 )

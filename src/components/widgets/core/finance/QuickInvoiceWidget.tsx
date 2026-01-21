@@ -1,10 +1,9 @@
-import React from 'react'
 import { AppWidget } from '@/components/widgets/core/AppWidget'
 import { useInvoiceStore } from '@/stores/invoice-store'
-import { Receipt, Plus, ArrowRight } from 'lucide-react'
+import { Receipt, Plus } from 'lucide-react'
 import { cn } from '@/services/utils'
 
-export function QuickInvoiceWidget({ id, onRemove }: { id?: string, onRemove?: () => void }) {
+export function QuickInvoiceWidget({ onRemove }: { id?: string, onRemove?: () => void }) {
   const { invoices } = useInvoiceStore()
   
   // Get last 3 invoices
@@ -14,8 +13,9 @@ export function QuickInvoiceWidget({ id, onRemove }: { id?: string, onRemove?: (
     <AppWidget 
       title="Quick Invoice" 
       icon={Receipt} 
-      id={id || 'quick-invoice'} 
-      onRemove={onRemove}
+      isConfigured={true}
+      configContent={null}
+      onRemove={onRemove || (() => {})}
     >
       <div className="h-full flex flex-col">
         <div className="flex-1 space-y-2 overflow-hidden">

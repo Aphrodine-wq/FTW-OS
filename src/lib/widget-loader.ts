@@ -3,18 +3,15 @@
  * Loads widgets on-demand to reduce initial bundle size
  */
 
-import React, { ComponentType, lazy } from 'react'
+import React, { ComponentType } from 'react'
 
 // Widget import map - organized by category for better chunking
 const WIDGET_IMPORTS: Record<string, () => Promise<{ default: ComponentType<any> }>> = {
   // Core System Widgets
   'system-health': () => import('@/components/widgets/core/sector-b/SystemHealth').then(m => ({ default: m.SystemHealth })),
-  'system-resources': () => import('@/components/widgets/core/sector-b/SystemResourcesWidget').then(m => ({ default: m.SystemResourcesWidget })),
-  'net-vis': () => import('@/components/widgets/core/sector-a/NetVisWidget').then(m => ({ default: m.NetVisWidget })),
   'quick-roi': () => import('@/components/widgets/core/sector-a/QuickROIWidget').then(m => ({ default: m.QuickROIWidget })),
   'day-stream': () => import('@/components/widgets/core/sector-a/DayStreamWidget').then(m => ({ default: m.DayStreamWidget })),
   'pomodoro': () => import('@/components/widgets/core/sector-d/PomodoroMax').then(m => ({ default: m.PomodoroMax })),
-  'crypto-matrix': () => import('@/components/widgets/core/sector-c/CryptoMatrix').then(m => ({ default: m.CryptoMatrix })),
   
   // Real/External Widgets
   'github': () => import('@/components/widgets/core/real/RealGithub').then(m => ({ default: m.RealGithubWidget })),
@@ -24,7 +21,6 @@ const WIDGET_IMPORTS: Record<string, () => Promise<{ default: ComponentType<any>
   
   // API Widgets
   'weather': () => import('@/components/widgets/api/WeatherWidget').then(m => ({ default: m.WeatherWidget })),
-  'crypto-prices': () => import('@/components/widgets/api/CryptoPricesWidget').then(m => ({ default: m.CryptoPricesWidget })),
   'news-feed': () => import('@/components/widgets/api/NewsFeedWidget').then(m => ({ default: m.NewsFeedWidget })),
   
   // Legacy Widgets (from Widgets.tsx)
@@ -42,9 +38,6 @@ const WIDGET_IMPORTS: Record<string, () => Promise<{ default: ComponentType<any>
   'nasa': () => import('@/components/widgets/fun/WidgetNasa').then(m => ({ default: m.WidgetNasa })),
   'excuse': () => import('@/components/widgets/fun/WidgetExcuse').then(m => ({ default: m.WidgetExcuse })),
   'quote': () => import('@/components/widgets/fun/WidgetQuote').then(m => ({ default: m.WidgetQuote })),
-  
-  // Revolutionary Widgets
-  'neural-flow': () => import('@/components/widgets/revolutionary/NeuralFlowWidget').then(m => ({ default: m.NeuralFlowWidget })),
 }
 
 // Widget preload cache

@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 // Lazy load stores to avoid circular dependencies
 let useWidgetStore: any = null
@@ -66,10 +65,8 @@ function debounce<T extends (...args: any[]) => any>(
 
 // Widget type aliases for backward compatibility
 const WIDGET_ALIASES: Record<string, string> = {
-  'crypto': 'crypto-matrix',
   'roi': 'quick-roi',
   'stream': 'day-stream',
-  'resources': 'system-resources',
 }
 
 interface WidgetConfig {
@@ -87,7 +84,7 @@ interface StoreState {
     widgets: WidgetConfig[]
     addWidget: (config: any) => void
     removeWidget: (id: string) => void
-    resetLayout: (dayIndex?: number) => void
+    resetLayout: () => void
     updateLayout: (layout: any) => void
   }
   themeStore: {
@@ -131,10 +128,6 @@ function DashboardInner({ setActiveTab, stores }: DashboardProps & { stores: Sto
   )
   
   const [showMondayBriefing, setShowMondayBriefing] = useState(false)
-  const [currentDayTab, setCurrentDayTab] = useState(() => {
-     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-     return days[new Date().getDay()]
-  })
 
   useEffect(() => {
     const isMonday = new Date().getDay() === 1
@@ -150,14 +143,6 @@ function DashboardInner({ setActiveTab, stores }: DashboardProps & { stores: Sto
       addWidget({ type: 'quote', x: 0, y: 0, w: 12, h: 2 })
     }
   }, [widgets.length, addWidget])
-
-  useEffect(() => {
-    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-    const dayIndex = days.indexOf(currentDayTab)
-    if (dayIndex !== -1) {
-        resetLayout(dayIndex)
-    }
-  }, [currentDayTab, resetLayout])
 
   const handleBriefingSave = (tasks: string[]) => {
     console.log("Weekly priorities set:", tasks)
@@ -217,7 +202,7 @@ function DashboardInner({ setActiveTab, stores }: DashboardProps & { stores: Sto
         )
     }
     
-    if (type === 'weather' || type === 'crypto-prices' || type === 'news-feed') {
+    if (type === 'weather' || type === 'news-feed') {
         return (
           <div className="h-full overflow-hidden">
             <LazyComponent />

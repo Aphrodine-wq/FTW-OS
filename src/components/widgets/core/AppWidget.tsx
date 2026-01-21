@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { Settings, X, Check } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { cn } from '@/services/utils'
 
 interface AppWidgetProps {

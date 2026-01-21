@@ -22,7 +22,6 @@ import { performanceService } from '@/services/performance-service'
 import { NotificationCenter } from '@/components/layout/NotificationCenter'
 import { QuickCapture } from '@/components/workflow/QuickCapture'
 import { ContextSidebar } from '@/components/layout/ContextSidebar'
-import { FloatingActionButton } from '@/components/layout/FloatingActionButton'
 import { KeyboardShortcutsHelp } from '@/components/layout/KeyboardShortcutsHelp'
 // Lazy load workflow engine
 let workflowEngine: any = null

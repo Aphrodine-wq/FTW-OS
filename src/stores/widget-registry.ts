@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 import { 
-  LayoutGrid, Calculator, Wifi, Activity, 
+  Calculator, Activity, 
   Github, Cloud, Gamepad2, Receipt, 
-  Briefcase, Calendar, MessageSquare, Terminal,
-  Brain, Zap, Flame, CloudRain, Bitcoin, Newspaper, Coffee
+  Briefcase, MessageSquare,
+  CloudRain, Newspaper, Coffee
 } from 'lucide-react'
 
 // NOTE: Components are NOT imported here to avoid circular dependencies.
@@ -13,7 +13,7 @@ export interface WidgetDefinition {
   type: string
   title: string
   description: string
-  category: 'productivity' | 'finance' | 'dev' | 'system' | 'fun' | 'revolutionary'
+  category: 'productivity' | 'finance' | 'dev' | 'system' | 'fun'
   icon: any
   defaultSize: { w: number; h: number }
   premium?: boolean
@@ -25,44 +25,6 @@ interface WidgetRegistryState {
 }
 
 const WIDGET_DEFINITIONS: WidgetDefinition[] = [
-  // Revolutionary Widgets
-  {
-    type: 'neural-flow',
-    title: 'Neural Flow',
-    description: 'AI-powered work pattern analyzer with productivity insights',
-    category: 'revolutionary',
-    icon: Brain,
-    defaultSize: { w: 4, h: 6 },
-    premium: true
-  },
-  {
-    type: 'revenue-reactor',
-    title: 'Revenue Reactor',
-    description: 'Nuclear-powered revenue intelligence and predictions',
-    category: 'finance',
-    icon: Zap,
-    defaultSize: { w: 4, h: 6 },
-    premium: true
-  },
-  {
-    type: 'trae-coder',
-    title: 'Trae Coder',
-    description: 'Full-stack development environment with AI assistance',
-    category: 'dev',
-    icon: Terminal,
-    defaultSize: { w: 6, h: 6 },
-    premium: true
-  },
-  {
-    type: 'pressure-cooker',
-    title: 'Pressure Cooker',
-    description: 'Real-time stress monitoring and burnout prevention',
-    category: 'productivity',
-    icon: Flame,
-    defaultSize: { w: 3, h: 5 },
-    premium: true
-  },
-  
   // Fun & Inspiration
   {
     type: 'quote',
@@ -90,14 +52,7 @@ const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     icon: Calculator,
     defaultSize: { w: 3, h: 4 }
   },
-  {
-    type: 'crypto-matrix',
-    title: 'Crypto Matrix',
-    description: 'Live cryptocurrency prices',
-    category: 'finance',
-    icon: Terminal,
-    defaultSize: { w: 6, h: 4 }
-  },
+  // Finance Widgets Continue...
   {
     type: 'weather',
     title: 'Weather',
@@ -105,14 +60,6 @@ const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     category: 'productivity',
     icon: CloudRain,
     defaultSize: { w: 3, h: 4 }
-  },
-  {
-    type: 'crypto-prices',
-    title: 'Crypto Prices',
-    description: 'Real-time cryptocurrency market data',
-    category: 'finance',
-    icon: Bitcoin,
-    defaultSize: { w: 3, h: 5 }
   },
   {
     type: 'news-feed',
@@ -150,23 +97,7 @@ const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   },
 
   // System
-  {
-    type: 'net-vis',
-    title: 'Network Vis',
-    description: 'Real-time network traffic',
-    category: 'system',
-    icon: Wifi,
-    defaultSize: { w: 6, h: 4 }
-  },
-  {
-    type: 'system-resources',
-    title: 'System Resources',
-    description: 'CPU and RAM usage',
-    category: 'system',
-    icon: Activity,
-    defaultSize: { w: 3, h: 4 }
-  },
-
+  
   // Dev
   {
     type: 'github',
@@ -214,7 +145,7 @@ const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   }
 ]
 
-export const useWidgetRegistry = create<WidgetRegistryState>((set, get) => ({
+export const useWidgetRegistry = create<WidgetRegistryState>((_set, _get) => ({
   definitions: WIDGET_DEFINITIONS,
   getDefinition: (type: string) => WIDGET_DEFINITIONS.find(w => w.type === type)
 }))

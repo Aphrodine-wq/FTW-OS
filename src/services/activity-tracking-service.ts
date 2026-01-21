@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { xpService } from './xp-service'
 
 export interface ActivityLog {
   id?: string
@@ -78,6 +79,19 @@ class ActivityTrackingService {
         session_type: this.currentSession.activityType
       }
     })
+
+    // Award XP for time spent
+    try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+             const minutes = Math.floor(duration / 60)
+             if (minutes > 0) {
+                 await xpService.awardXp(user.id, 'time_logged', minutes)
+             }
+        }
+    } catch (e) {
+        console.error('Failed to award XP for time logged', e)
+    }
 
     this.currentSession = null
   }
@@ -224,7 +238,7 @@ class ActivityTrackingService {
   }
 
   // Predict best time for a task type
-  async predictBestTime(taskType: string): Promise<{ hour: number; confidence: number }> {
+  async predictBestTime(_taskType: string): Promise<{ hour: number; confidence: number }> {
     const pattern = await this.getHourlyPattern()
     
     if (pattern.size === 0) {

@@ -89,9 +89,6 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
       bgColor: 'bg-blue-500/10',
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, desc: 'Overview & Stats' },
-        { id: 'analytics', label: 'Analytics', icon: PieChart, desc: 'Performance Metrics' },
-        { id: 'settings', label: 'Settings', icon: Settings, desc: 'System Config' },
-        { id: 'pulse', label: 'Pulse', icon: Activity, desc: 'Live Activity Feed' },
       ]
     },
     {
@@ -103,10 +100,8 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
       items: [
         { id: 'projects', label: 'Projects', icon: Folder, desc: 'Mission Control' },
         { id: 'tasks', label: 'Tasks', icon: CheckSquare, desc: 'Action Items' },
-        { id: 'calendar', label: 'Calendar', icon: Calendar, desc: 'Schedule' },
-        { id: 'brain', label: 'Notes', icon: BookOpen, desc: 'Second Brain' },
         { id: 'tracker', label: 'Time Tracker', icon: Clock, desc: 'Deep Work' },
-        { id: 'courses', label: 'Learning', icon: GraduationCap, desc: 'Skill Tree' },
+        { id: 'calendar', label: 'Calendar', icon: Calendar, desc: 'Schedule' },
       ]
     },
     {
@@ -117,8 +112,6 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
       bgColor: 'bg-violet-500/10',
       items: [
         { id: 'dev', label: 'Dev HQ', icon: Code, desc: 'Repository Manager' },
-        { id: 'trae', label: 'Trae Coder', icon: Terminal, desc: 'Integrated IDE' },
-        { id: 'snippets', label: 'Snippets', icon: Code2, desc: 'Code Library' },
         { id: 'servers', label: 'Servers', icon: Server, desc: 'Infrastructure' },
         { id: 'docker', label: 'Docker', icon: Box, desc: 'Containers' },
         { id: 'workflows', label: 'Workflows', icon: Zap, desc: 'Automation' },
@@ -147,12 +140,10 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
       color: 'from-pink-500 to-rose-500',
       bgColor: 'bg-pink-500/10',
       items: [
-        { id: 'marketing', label: 'Marketing', icon: BarChart3, desc: 'Campaigns' },
-        { id: 'mail', label: 'Mail', icon: Mail, desc: 'Communications' },
-        { id: 'content-calendar', label: 'Content', icon: Calendar, desc: 'Publishing' },
         { id: 'documents', label: 'Drive', icon: Folder, desc: 'Assets' },
         { id: 'seo', label: 'SEO', icon: Search, desc: 'Visibility' },
-        { id: 'newsletter', label: 'Newsletter', icon: PenTool, desc: 'Audience' },
+        { id: 'mail', label: 'Mail', icon: Mail, desc: 'Communications' },
+        { id: 'marketing', label: 'Marketing', icon: BarChart3, desc: 'Campaigns' },
       ]
     },
     {
@@ -162,11 +153,7 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
       color: 'from-slate-500 to-gray-600',
       bgColor: 'bg-slate-500/10',
       items: [
-        { id: 'vault', label: 'Security Vault', icon: Key, desc: 'Credentials' },
-        { id: 'contracts', label: 'Contracts', icon: FileText, desc: 'Legal' },
-        { id: 'assets', label: 'Assets', icon: Laptop, desc: 'Hardware' },
-        { id: 'payroll', label: 'Payroll', icon: Users, desc: 'Team' },
-        { id: 'update', label: 'Update OS', icon: RefreshCw, desc: `v${__APP_VERSION__}` },
+        { id: 'settings', label: 'Settings', icon: Settings, desc: 'System Config' },
       ]
     }
   ]
@@ -369,7 +356,7 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
                     >
                       <div className="flex items-start justify-between">
                         <item.icon className={cn(
-                          "h-5 w-5 transition-transform group-hover/item:scale-110",
+                          "h-4 w-4 transition-transform group-hover/item:scale-110",
                           mode === 'glass' ? "text-white/80" : "text-black/80"
                         )} />
                         <ChevronRight className={cn(

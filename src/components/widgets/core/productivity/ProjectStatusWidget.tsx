@@ -1,10 +1,9 @@
-import React from 'react'
 import { AppWidget } from '@/components/widgets/core/AppWidget'
 import { Briefcase, CheckCircle2, Circle, Clock, Github } from 'lucide-react'
 import { cn } from '@/services/utils'
 import { useProjectStore } from '@/stores/project-store'
 
-export function ProjectStatusWidget({ id, onRemove }: { id?: string, onRemove?: () => void }) {
+export function ProjectStatusWidget({ onRemove }: { id?: string, onRemove?: () => void }) {
   const { projects } = useProjectStore()
   
   // Show only active projects, max 4
@@ -23,8 +22,9 @@ export function ProjectStatusWidget({ id, onRemove }: { id?: string, onRemove?: 
     <AppWidget 
       title="Active Projects" 
       icon={Briefcase} 
-      id={id || 'projects'} 
-      onRemove={onRemove}
+      isConfigured={true}
+      configContent={null}
+      onRemove={onRemove || (() => {})}
     >
       {activeProjects.length === 0 ? (
           <div 

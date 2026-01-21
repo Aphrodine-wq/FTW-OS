@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Shield, Cpu, Database, CheckCircle } from 'lucide-react'
+import { FloatingParticles } from './landing/FloatingParticles'
 
 type BootStage = {
   id: string

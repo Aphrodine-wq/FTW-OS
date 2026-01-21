@@ -8,7 +8,7 @@ import { ComponentType, lazy } from 'react'
 export interface WidgetMetadata {
   id: string
   name: string
-  category: 'finance' | 'productivity' | 'information' | 'system' | 'lifestyle' | 'fun' | 'revolutionary'
+  category: 'finance' | 'productivity' | 'information' | 'system' | 'lifestyle' | 'fun'
   description?: string
   component: ComponentType<any> | (() => Promise<{ default: ComponentType<any> }>)
   requiresConfig?: boolean
@@ -20,7 +20,6 @@ export interface WidgetMetadata {
 const StockMarketWidget = lazy(() => import('@/components/widgets/finance/StockMarketWidget').then(m => ({ default: m.StockMarketWidget })))
 const CurrencyWidget = lazy(() => import('@/components/widgets/finance/CurrencyWidget').then(m => ({ default: m.CurrencyWidget })))
 const GasPricesWidget = lazy(() => import('@/components/widgets/finance/GasPricesWidget').then(m => ({ default: m.GasPricesWidget })))
-const CryptoPricesWidget = lazy(() => import('@/components/widgets/api/CryptoPricesWidget').then(m => ({ default: m.CryptoPricesWidget })))
 const QuickInvoiceWidget = lazy(() => import('@/components/widgets/core/finance/QuickInvoiceWidget').then(m => ({ default: m.QuickInvoiceWidget })))
 
 const CalendarWidget = lazy(() => import('@/components/widgets/productivity/CalendarWidget').then(m => ({ default: m.CalendarWidget })))
@@ -37,9 +36,7 @@ const NewsFeedWidget = lazy(() => import('@/components/widgets/api/NewsFeedWidge
 const NetworkSpeedWidget = lazy(() => import('@/components/widgets/system/NetworkSpeedWidget').then(m => ({ default: m.NetworkSpeedWidget })))
 const BatteryWidget = lazy(() => import('@/components/widgets/system/BatteryWidget').then(m => ({ default: m.BatteryWidget })))
 const DiskSpaceWidget = lazy(() => import('@/components/widgets/system/DiskSpaceWidget').then(m => ({ default: m.DiskSpaceWidget })))
-const SystemResourcesWidget = lazy(() => import('@/components/widgets/core/sector-b/SystemResourcesWidget').then(m => ({ default: m.SystemResourcesWidget })))
 const SystemHealth = lazy(() => import('@/components/widgets/core/sector-b/SystemHealth').then(m => ({ default: m.SystemHealth })))
-const NetVisWidget = lazy(() => import('@/components/widgets/core/sector-a/NetVisWidget').then(m => ({ default: m.NetVisWidget })))
 
 const FitnessWidget = lazy(() => import('@/components/widgets/lifestyle/FitnessWidget').then(m => ({ default: m.FitnessWidget })))
 const AirQualityWidget = lazy(() => import('@/components/widgets/lifestyle/AirQualityWidget').then(m => ({ default: m.AirQualityWidget })))
@@ -48,9 +45,6 @@ const WidgetQuote = lazy(() => import('@/components/widgets/fun/WidgetQuote').th
 const WidgetNasa = lazy(() => import('@/components/widgets/fun/WidgetNasa').then(m => ({ default: m.WidgetNasa })))
 const WidgetRoast = lazy(() => import('@/components/widgets/fun/WidgetRoast').then(m => ({ default: m.WidgetRoast })))
 const WidgetExcuse = lazy(() => import('@/components/widgets/fun/WidgetExcuse').then(m => ({ default: m.WidgetExcuse })))
-
-const NeuralFlowWidget = lazy(() => import('@/components/widgets/revolutionary/NeuralFlowWidget').then(m => ({ default: m.NeuralFlowWidget })))
-const RevenueReactorWidget = lazy(() => import('@/components/widgets/revolutionary/RevenueReactorWidget').then(m => ({ default: m.RevenueReactorWidget })))
 
 // Widget registry with all widgets
 export const WIDGET_REGISTRY: Record<string, WidgetMetadata[]> = {
@@ -80,14 +74,6 @@ export const WIDGET_REGISTRY: Record<string, WidgetMetadata[]> = {
       refreshInterval: 3600000, // 1 hour
     },
     {
-      id: 'crypto',
-      name: 'Crypto Prices',
-      category: 'finance',
-      description: 'Cryptocurrency prices and trends',
-      component: CryptoPricesWidget,
-      refreshInterval: 60000, // 1 minute
-    },
-    {
       id: 'quick-invoice',
       name: 'Quick Invoice',
       category: 'finance',
@@ -110,6 +96,7 @@ export const WIDGET_REGISTRY: Record<string, WidgetMetadata[]> = {
       category: 'productivity',
       description: 'Multiple time zones',
       component: TimeZonesWidget,
+      refreshInterval: 300000, // 5 minutes
     },
     {
       id: 'pomodoro',
@@ -117,6 +104,7 @@ export const WIDGET_REGISTRY: Record<string, WidgetMetadata[]> = {
       category: 'productivity',
       description: 'Focus timer with breaks',
       component: PomodoroMax,
+      refreshInterval: 1000, // 1 second
     },
     {
       id: 'project-status',
@@ -124,6 +112,7 @@ export const WIDGET_REGISTRY: Record<string, WidgetMetadata[]> = {
       category: 'productivity',
       description: 'Active projects overview',
       component: ProjectStatusWidget,
+      refreshInterval: 60000,
     },
   ],
   information: [
@@ -194,28 +183,12 @@ export const WIDGET_REGISTRY: Record<string, WidgetMetadata[]> = {
       refreshInterval: 300000, // 5 minutes
     },
     {
-      id: 'system-resources',
-      name: 'System Resources',
-      category: 'system',
-      description: 'CPU, RAM, and system usage',
-      component: SystemResourcesWidget,
-      refreshInterval: 2000, // 2 seconds
-    },
-    {
       id: 'system-health',
       name: 'System Health',
       category: 'system',
       description: 'Overall system health metrics',
       component: SystemHealth,
       refreshInterval: 5000, // 5 seconds
-    },
-    {
-      id: 'netvis',
-      name: 'Network Visualization',
-      category: 'system',
-      description: 'Network traffic visualization',
-      component: NetVisWidget,
-      refreshInterval: 1000, // 1 second
     },
   ],
   lifestyle: [
@@ -265,24 +238,6 @@ export const WIDGET_REGISTRY: Record<string, WidgetMetadata[]> = {
       category: 'fun',
       description: 'Random developer excuses',
       component: WidgetExcuse,
-    },
-  ],
-  revolutionary: [
-    {
-      id: 'neural-flow',
-      name: 'Neural Flow',
-      category: 'revolutionary',
-      description: 'AI-powered productivity visualization',
-      component: NeuralFlowWidget,
-      refreshInterval: 1000, // 1 second
-    },
-    {
-      id: 'revenue-reactor',
-      name: 'Revenue Reactor',
-      category: 'revolutionary',
-      description: 'Revenue tracking and projections',
-      component: RevenueReactorWidget,
-      refreshInterval: 60000, // 1 minute
     },
   ],
 }
