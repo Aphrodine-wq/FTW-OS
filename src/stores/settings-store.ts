@@ -70,15 +70,30 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     }
   },
 
-  setBusinessProfile: (profile) => set({ businessProfile: profile }),
+  setBusinessProfile: (profile) => {
+    set({ businessProfile: profile })
+    if (get().preferences.autoSave) {
+        get().saveSettings()
+    }
+  },
 
-  updatePreferences: (newPreferences) => set((state) => ({
-    preferences: { ...state.preferences, ...newPreferences }
-  })),
+  updatePreferences: (newPreferences) => {
+    set((state) => ({
+      preferences: { ...state.preferences, ...newPreferences }
+    }))
+    if (get().preferences.autoSave) {
+        get().saveSettings()
+    }
+  },
 
-  updateIntegrations: (newIntegrations) => set((state) => ({
-    integrations: { ...state.integrations, ...newIntegrations }
-  })),
+  updateIntegrations: (newIntegrations) => {
+    set((state) => ({
+      integrations: { ...state.integrations, ...newIntegrations }
+    }))
+    if (get().preferences.autoSave) {
+        get().saveSettings()
+    }
+  },
 
   loadSettings: async () => {
     try {

@@ -52,9 +52,25 @@ class Logger {
     }
     
     // In production, send to error tracking service
-    // TODO: Integrate with error tracking service (Sentry, etc.)
     if (this.isProduction && error) {
-      // Error tracking would go here
+      // Mock error tracking implementation for now
+      // In a real app, this would send to Sentry/LogRocket
+      // We use a safe fallback to localStorage to persist critical errors for debugging
+      try {
+        const errorLog = JSON.parse(localStorage.getItem('error_logs') || '[]')
+        errorLog.push({
+            timestamp: new Date().toISOString(),
+            message,
+            stack: errorObj.stack,
+            context
+        })
+        // Keep only last 50 errors
+        if (errorLog.length > 50) errorLog.shift()
+        localStorage.setItem('error_logs', JSON.stringify(errorLog))
+      } catch (e) {
+        // Fallback if localStorage fails (e.g. quota exceeded)
+        console.error('Failed to log error to storage', e)
+      }
     }
   }
 

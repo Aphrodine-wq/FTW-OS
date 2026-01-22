@@ -4,6 +4,7 @@ import { supabase } from '@/services/supabase'
 import { injectSeedData } from '@/lib/seed-data'
 import { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { googleOAuth, GoogleUser, GoogleTokens } from '@/services/google-oauth'
+import { logger } from '@/lib/logger'
 
 interface User {
   id: string
@@ -36,76 +37,67 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       tokens: null,
       initializeListener: () => {
+         // Simplified listener for Supabase auth state (if still using for other features)
          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
             if (event === 'SIGNED_OUT') {
                 set({ isAuthenticated: false, user: null })
-            } else if (session?.user) {
-                // Fetch role from profiles table (mocked for now as 'admin' if not found)
-                // In a real scenario: const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single()
-                
-                set({
-                    isAuthenticated: true,
-                    user: {
-                        id: session.user.id,
-                        name: session.user.user_metadata.full_name || session.user.email?.split('@')[0],
-                        email: session.user.email || '',
-                        avatar: session.user.user_metadata.avatar_url,
-                        role: 'admin' // Default to admin for the owner
-                    }
-                })
-            }
+            } 
+            // Note: We primarily use handleGoogleCallback for the main auth flow now
          })
          return () => subscription.unsubscribe()
       },
       login: async () => {
-        // Trigger Google Login via Supabase (legacy)
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent',
-                },
-            },
-        })
-        if (error) {
-          // Error handled by caller
-        }
+        // Redirect to new flow
+        return useAuthStore.getState().loginWithGoogleOAuth()
       },
       loginWithGoogleOAuth: async () => {
         // New Google OAuth-only flow using credentials from vault
-        const result = await googleOAuth.login()
-        if (!result.success) {
-          return { error: result.error }
+        try {
+          const result = await googleOAuth.login()
+          if (!result.success) {
+            logger.error('Google OAuth login failed', result.error)
+            return { error: result.error }
+          }
+          return {}
+        } catch (error) {
+          logger.error('Unexpected error during Google OAuth login', error)
+          return { error: 'Unexpected login error' }
         }
-        return {}
       },
       handleGoogleCallback: async (url: string) => {
         // Handle OAuth callback and set user session
-        const result = await googleOAuth.handleCallback(url)
-        if (!result.success || !result.user) {
-          return { error: result.error || 'Authentication failed' }
+        try {
+          const result = await googleOAuth.handleCallback(url)
+          if (!result.success || !result.user) {
+            logger.error('Google OAuth callback handling failed', result.error)
+            return { error: result.error || 'Authentication failed' }
+          }
+
+          const googleUser = result.user
+          set({
+            isAuthenticated: true,
+            user: {
+              id: googleUser.id,
+              name: googleUser.name,
+              email: googleUser.email,
+              avatar: googleUser.picture,
+              role: 'admin'
+            },
+            tokens: result.tokens || null
+          })
+
+          logger.info('User logged in successfully via Google', { userId: googleUser.id })
+
+          // Inject seed data for usable state
+          injectSeedData().catch((err) => {
+            logger.warn('Seed data injection failed', err)
+          })
+
+          return {}
+        } catch (error) {
+          logger.error('Unexpected error during Google callback handling', error)
+          return { error: 'Callback handling failed' }
         }
-
-        const googleUser = result.user
-        set({
-          isAuthenticated: true,
-          user: {
-            id: googleUser.id,
-            name: googleUser.name,
-            email: googleUser.email,
-            avatar: googleUser.picture,
-            role: 'admin'
-          },
-          tokens: result.tokens || null
-        })
-
-        // Inject seed data for usable state
-        injectSeedData().catch(() => {
-          // Seed data injection failed - non-critical
-        })
-
-        return {}
       },
       loginAsGuest: () => {
         set({

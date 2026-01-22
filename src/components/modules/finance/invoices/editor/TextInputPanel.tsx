@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2, FileText, FormInput, User, Plus, Trash2, Package, Upload, Mic, MicOff, Clock, CheckSquare, Receipt, PenTool, File } from 'lucide-react'
 import { useInvoice } from '@/hooks/useInvoice'
 import { Client, Product, Task, ProjectUpdate } from '@/types/invoice'
@@ -14,7 +15,6 @@ import { InvoiceFormBuilder } from './InvoiceFormBuilder'
 
 export function TextInputPanel() {
   const [docType, setDocType] = useState<'invoice' | 'document'>('invoice')
-  const [mode, setMode] = useState<'text' | 'form'>('text')
   const [inputText, setInputText] = useState('')
   const [clients, setClients] = useState<Client[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -231,17 +231,16 @@ export function TextInputPanel() {
 
   const handleClientSelect = (client: Client) => {
     if (docType === 'invoice') {
-      if (mode === 'text') {
-        const clientBlock = `Client: ${client.name}\nEmail: ${client.email || ''}\nBill To: ${client.address?.street || ''}, ${client.address?.city || ''}\n\n`
-        setInputText(clientBlock + inputText)
-      } else {
-        if (currentInvoice) {
-          updateInvoice({ 
-            clientId: client.name,
-            clientEmail: client.email,
-            clientAddress: client.address
-          })
-        }
+      if (currentInvoice) {
+        updateInvoice({ 
+          clientId: client.name,
+          clientEmail: client.email,
+          clientAddress: client.address
+        })
+      }
+      const clientBlock = `Client: ${client.name}\nEmail: ${client.email || ''}\nBill To: ${client.address?.street || ''}, ${client.address?.city || ''}\n\n`
+      if (!inputText.includes('Client:')) {
+          setInputText(clientBlock + inputText)
       }
     } else {
       setCurrentDocument(prev => ({ ...prev, clientId: client.id }))
@@ -366,56 +365,31 @@ Notes: Thank you for your business!
 Terms: Payment due within 30 days`
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <div className="flex items-center gap-4">
-            <CardTitle className="flex items-center gap-2">
-            {docType === 'invoice' ? <Receipt className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
-            Workspace
-            </CardTitle>
-            
+    <Card className="h-full flex flex-col border-none shadow-none bg-transparent">
+      <CardHeader className="px-0 pt-0 pb-4">
+        <div className="flex items-center justify-between mb-4">
             <div className="flex bg-muted p-1 rounded-lg">
                 <button 
                     onClick={() => setDocType('invoice')}
-                    className={`px-3 py-1 text-xs rounded-md transition-all ${docType === 'invoice' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${docType === 'invoice' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     Invoice
                 </button>
                 <button 
                     onClick={() => setDocType('document')}
-                    className={`px-3 py-1 text-xs rounded-md transition-all ${docType === 'document' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${docType === 'document' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     Document
                 </button>
             </div>
         </div>
 
-        {docType === 'invoice' && (
-            <div className="flex gap-2">
-            <Button 
-                variant={mode === 'text' ? 'default' : 'ghost'} 
-                size="sm"
-                onClick={() => setMode('text')}
-            >
-                Text
-            </Button>
-            <Button 
-                variant={mode === 'form' ? 'default' : 'ghost'} 
-                size="sm"
-                onClick={() => setMode('form')}
-            >
-                Form
-            </Button>
-            </div>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-4 flex-1 overflow-auto">
         {/* Client Autocomplete */}
         <div className="relative z-10">
           <div className="relative">
-            <User className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
-              className="w-full pl-8 p-2 text-sm border rounded-md"
+              className="w-full pl-9 p-2.5 text-sm bg-background border rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
               placeholder="Search saved clients..."
               value={clientSearch}
               onChange={(e) => {
@@ -426,11 +400,11 @@ Terms: Payment due within 30 days`
             />
           </div>
           {showSuggestions && clientSearch && (
-            <div className="absolute w-full mt-1 bg-popover border rounded-md shadow-lg">
+            <div className="absolute w-full mt-1 bg-popover border rounded-xl shadow-xl overflow-hidden z-20">
               {filteredClients.map(client => (
                 <div
                   key={client.id}
-                  className="p-2 hover:bg-accent cursor-pointer text-sm"
+                  className="p-3 hover:bg-accent cursor-pointer text-sm border-b last:border-0"
                   onClick={() => handleClientSelect(client)}
                 >
                   <div className="font-medium">{client.name}</div>
@@ -438,45 +412,80 @@ Terms: Payment due within 30 days`
                 </div>
               ))}
               {filteredClients.length === 0 && (
-                <div className="p-2 text-sm text-muted-foreground">No clients found</div>
+                <div className="p-3 text-sm text-muted-foreground">No clients found</div>
               )}
             </div>
           )}
         </div>
+      </CardHeader>
 
-        {/* Unified Toolbar */}
-        <div className="flex gap-2 pb-4 border-b">
-            {docType === 'invoice' && (
-                <Button variant="outline" className="flex-1" onClick={() => document.getElementById('csv-upload')?.click()}>
-                    <Upload className="mr-2 h-4 w-4" /> Import CSV
-                </Button>
-            )}
-            <input 
-                type="file" 
-                id="csv-upload" 
-                className="hidden" 
-                accept=".csv"
-                onChange={handleCSVImport}
-            />
-            <Button variant="outline" className="flex-1" onClick={handleImportSession}>
-                <Clock className="mr-2 h-4 w-4" /> Time Log
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={handleImportTasks}>
-                <CheckSquare className="mr-2 h-4 w-4" /> Tasks
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={toggleListening}>
-                {isListening ? <MicOff className="mr-2 h-4 w-4 text-red-500 animate-pulse" /> : <Mic className="mr-2 h-4 w-4" />}
-                {isListening ? 'Stop' : 'Dictate'}
-            </Button>
-        </div>
+      <CardContent className="px-0 flex-1 overflow-hidden flex flex-col">
+        {docType === 'invoice' ? (
+           <Tabs defaultValue="form" className="flex-1 flex flex-col">
+             <div className="flex items-center justify-between mb-4">
+               <TabsList>
+                 <TabsTrigger value="form" className="gap-2"><FormInput className="h-4 w-4" /> Form</TabsTrigger>
+                 <TabsTrigger value="text" className="gap-2"><FileText className="h-4 w-4" /> Text Parser</TabsTrigger>
+               </TabsList>
+               
+               <div className="flex gap-2">
+                 <Button variant="outline" size="sm" onClick={() => document.getElementById('csv-upload')?.click()}>
+                     <Upload className="h-4 w-4" />
+                 </Button>
+                 <input type="file" id="csv-upload" className="hidden" accept=".csv" onChange={handleCSVImport} />
+                 
+                 <Button variant="outline" size="sm" onClick={handleImportSession} title="Import Time Log">
+                     <Clock className="h-4 w-4" />
+                 </Button>
+                 <Button variant="outline" size="sm" onClick={handleImportTasks} title="Import Tasks">
+                     <CheckSquare className="h-4 w-4" />
+                 </Button>
+                 <Button variant={isListening ? "destructive" : "outline"} size="sm" onClick={toggleListening} title="Dictate">
+                     {isListening ? <MicOff className="h-4 w-4 animate-pulse" /> : <Mic className="h-4 w-4" />}
+                 </Button>
+               </div>
+             </div>
 
-        {docType === 'document' ? (
-            <div className="space-y-6">
-                 <div className="grid grid-cols-2 gap-4">
+             <TabsContent value="form" className="flex-1 overflow-y-auto pr-2 mt-0">
+               {!currentInvoice ? (
+                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 border-2 border-dashed rounded-xl">
+                   <Receipt className="h-12 w-12 mb-4 opacity-20" />
+                   <p>Create a new invoice to get started</p>
+                 </div>
+               ) : (
+                 <InvoiceFormBuilder currentInvoice={currentInvoice} products={products} />
+               )}
+             </TabsContent>
+
+             <TabsContent value="text" className="flex-1 flex flex-col mt-0">
+                <Textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="Enter invoice details here... (e.g. 'Client: Acme Corp...')"
+                    className="flex-1 font-mono text-sm resize-none mb-4"
+                    disabled={isParsing}
+                />
+                <div className="flex gap-2">
+                    <Button 
+                        onClick={handleParse} 
+                        disabled={!inputText.trim() || isParsing}
+                        className="flex-1"
+                    >
+                        {isParsing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Parsing...</> : 'Parse Invoice'}
+                    </Button>
+                    <Button variant="outline" onClick={() => setInputText(exampleText)} disabled={isParsing}>
+                        Example
+                    </Button>
+                </div>
+             </TabsContent>
+           </Tabs>
+        ) : (
+           <div className="flex-1 flex flex-col space-y-4 overflow-y-auto pr-2">
+                <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Document Title</label>
                         <input 
-                            className="w-full p-2 border rounded-md" 
+                            className="w-full p-2.5 text-sm bg-background border rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none" 
                             placeholder="e.g. Q1 Proposal"
                             value={currentDocument.title || ''}
                             onChange={(e) => setCurrentDocument(prev => ({ ...prev, title: e.target.value }))}
@@ -485,7 +494,7 @@ Terms: Payment due within 30 days`
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Type</label>
                         <select 
-                            className="w-full p-2 border rounded-md"
+                            className="w-full p-2.5 text-sm bg-background border rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none"
                             value={currentDocument.type || 'compensation'}
                             onChange={(e) => setCurrentDocument(prev => ({ ...prev, type: e.target.value as any }))}
                         >
@@ -498,8 +507,15 @@ Terms: Payment due within 30 days`
                     </div>
                 </div>
 
-                <div className="space-y-2 flex-1 h-full flex flex-col">
-                    <label className="text-sm font-medium">Content (Markdown)</label>
+                <div className="space-y-2 flex-1 flex flex-col">
+                    <label className="text-sm font-medium flex justify-between">
+                        Content (Markdown)
+                        <div className="flex gap-2">
+                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleImportSession}><Clock className="h-3 w-3" /></Button>
+                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleImportTasks}><CheckSquare className="h-3 w-3" /></Button>
+                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={toggleListening}><Mic className="h-3 w-3" /></Button>
+                        </div>
+                    </label>
                     <Textarea 
                         className="flex-1 min-h-[400px] font-mono text-sm resize-none"
                         placeholder="# Executive Summary..."
@@ -514,62 +530,11 @@ Terms: Payment due within 30 days`
                 <Button className="w-full" onClick={handleSaveDocument}>
                     Save Document
                 </Button>
-            </div>
-        ) : (
-            <>
-                {mode === 'text' ? (
-                <>
-                    <div className="space-y-2 flex-1">
-                    <Textarea
-                        value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
-                        placeholder="Enter invoice details here... (e.g. 'Client: Acme Corp...')"
-                        className="min-h-[400px] font-mono text-sm resize-none"
-                        disabled={isParsing}
-                    />
-                    </div>
-
-                    <div className="flex gap-2">
-                    <Button 
-                        onClick={handleParse} 
-                        disabled={!inputText.trim() || isParsing}
-                        className="flex-1"
-                    >
-                        {isParsing ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Parsing...
-                        </>
-                        ) : (
-                        'Parse Invoice'
-                        )}
-                    </Button>
-                    
-                    <Button 
-                        variant="outline" 
-                        onClick={() => setInputText(exampleText)}
-                        disabled={isParsing}
-                    >
-                        Example
-                    </Button>
-                    </div>
-                </>
-                ) : (
-                <div className="space-y-6">
-                    {!currentInvoice ? (
-                    <div className="text-center text-muted-foreground py-8">
-                        Parse an invoice first or create new
-                    </div>
-                    ) : (
-                    <InvoiceFormBuilder currentInvoice={currentInvoice} products={products} />
-                    )}
-                </div>
-                )}
-            </>
+           </div>
         )}
 
         {parseError && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="mt-4">
             <AlertDescription>{parseError}</AlertDescription>
           </Alert>
         )}

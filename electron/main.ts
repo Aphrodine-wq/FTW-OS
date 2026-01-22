@@ -7,6 +7,7 @@ import { setupIntegrationHandlers } from './integrations'
 import { setupFileSystemHandlers } from './fs-handlers'
 import { setupVaultHandlers } from './vault'
 import { setupMailHandlers } from './mail'
+import { setupBackupHandlers } from './backup'
 import { setupTerminalHandlers } from './terminal'
 import { setupGithubHandlers } from './github' // Import the new handler
 import { setupFileHandlers } from './files'
@@ -33,6 +34,7 @@ setupVaultHandlers()
 setupMailHandlers()
 setupGithubHandlers() // Initialize GitHub handlers
 setupFileHandlers() // Real File System Access
+setupBackupHandlers()
 
 // Global Error Handling
 process.on('uncaughtException', (error) => {
@@ -136,6 +138,18 @@ function createWindow() {
   })
 }
 
+// Standardized Error Handler Wrapper
+const handleIPC = (handler: (...args: any[]) => Promise<any>) => {
+  return async (...args: any[]) => {
+    try {
+      return await handler(...args)
+    } catch (error) {
+      console.error('IPC Error:', error)
+      return { success: false, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
+}
+
 // Window Controls Handlers
 ipcMain.handle('window:minimize', () => {
   win?.minimize()
@@ -154,33 +168,33 @@ ipcMain.handle('window:close', () => {
 })
 
 // Tracker Handlers
-ipcMain.handle('tracker:start-session', async (_, { projectId, path }) => {
+ipcMain.handle('tracker:start-session', handleIPC(async (_, { projectId, path }) => {
   return await TrackerService.startSession(projectId, path)
-})
+}))
 
-ipcMain.handle('tracker:stop-session', async () => {
+ipcMain.handle('tracker:stop-session', handleIPC(async () => {
   return await TrackerService.stopSession()
-})
+}))
 
-ipcMain.handle('tracker:get-current', () => {
+ipcMain.handle('tracker:get-current', handleIPC(async () => {
   return TrackerService.getCurrentSession()
-})
+}))
 
-ipcMain.handle('tracker:get-sessions', async (_, projectId) => {
+ipcMain.handle('tracker:get-sessions', handleIPC(async (_, projectId) => {
   return await TrackerService.getProjectSessions(projectId)
-})
+}))
 
-ipcMain.handle('tracker:save-manual', async (_, session) => {
+ipcMain.handle('tracker:save-manual', handleIPC(async (_, session) => {
   return await TrackerService.saveManualSession(session)
-})
+}))
 
-ipcMain.handle('dialog:open-directory-legacy', async () => {
+ipcMain.handle('dialog:open-directory-legacy', handleIPC(async () => {
   if (!win) return null
   const result = await dialog.showOpenDialog(win, {
     properties: ['openDirectory']
   })
   return result.filePaths[0]
-})
+}))
 
 app.on('window-all-closed', () => {
   win = null

@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/services/utils'
 import { FloatingParticles } from './landing/FloatingParticles'
 import { LandingHeader } from './landing/LandingHeader'
 import { AuthModal } from './landing/AuthModal'
+import { useAuthStore } from '@/stores/auth-store'
 
 interface LandingGateProps {
   onEnter: () => void
@@ -14,9 +15,28 @@ export const LandingGate: React.FC<LandingGateProps> = ({ onEnter }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isEntering, setIsEntering] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const { isAuthenticated } = useAuthStore()
 
   const handleContinue = () => {
-    setShowAuthModal(true)
+    if (isAuthenticated) {
+      setIsEntering(true)
+      setTimeout(onEnter, 800)
+    } else {
+      setShowAuthModal(true)
+    }
+  }
+
+  // Watch for successful login
+  useEffect(() => {
+    if (isAuthenticated && showAuthModal) {
+      setShowAuthModal(false)
+      setIsEntering(true)
+      setTimeout(onEnter, 800)
+    }
+  }, [isAuthenticated, showAuthModal, onEnter])
+
+  const handleCloseModal = () => {
+    setShowAuthModal(false)
   }
 
   const handleBypass = () => {
@@ -71,7 +91,7 @@ export const LandingGate: React.FC<LandingGateProps> = ({ onEnter }) => {
       </motion.div>
 
       {/* Auth Modal */}
-      <AuthModal isOpen={showAuthModal} onClose={handleBypass} />
+      <AuthModal isOpen={showAuthModal} onClose={handleCloseModal} />
     </motion.div>
   )
 }

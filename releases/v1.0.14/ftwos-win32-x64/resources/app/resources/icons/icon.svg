@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="256" height="256" rx="32" fill="#2563eb"/>
-  <path d="M64 64H192V192H64V64Z" fill="white" fill-opacity="0.2"/>
-  <path d="M80 80H176V176H80V80Z" fill="white"/>
-  <text x="128" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white">IF</text>
-</svg>

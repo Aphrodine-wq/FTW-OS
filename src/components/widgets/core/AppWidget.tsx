@@ -74,14 +74,16 @@ export const AppWidget = React.forwardRef<HTMLDivElement, AppWidgetProps>(({
               "flex items-center gap-1 transition-opacity duration-200",
               isHovered ? "opacity-100" : "opacity-0"
             )}>
-              <button 
-                onClick={(e) => { e.stopPropagation(); setShowConfig(true) }}
-                className="p-1 rounded hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
-                title="Settings"
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                <Settings className="h-3.5 w-3.5" />
-              </button>
+              {configContent && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setShowConfig(true) }}
+                  className="p-1 rounded hover:bg-[var(--bg-surface-hover)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
+                  title="Settings"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
 

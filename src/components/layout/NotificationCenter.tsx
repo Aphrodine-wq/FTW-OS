@@ -14,7 +14,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useNotificationStore, AppNotification } from '@/stores/notification-store'
 import { formatDistanceToNow } from 'date-fns'
-import { notificationEngine } from '@/services/smart-notifications'
 
 function NotificationItem({ notification }: { notification: AppNotification }) {
   const markAsRead = useNotificationStore(state => state.markAsRead)

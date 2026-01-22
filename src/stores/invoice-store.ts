@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { Invoice } from '@/types/invoice'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from './auth-store'
+import { logger } from '@/lib/logger'
 
 interface InvoiceState {
   invoices: Invoice[]
@@ -59,7 +60,7 @@ export const useInvoiceStore = create<InvoiceState>()(
                 await window.ipcRenderer.invoke('db:save-invoices', cloudParsed)
             }
         } catch (e: any) {
-            console.warn('Sync failed, using local data:', e)
+            logger.warn('Sync failed, using local data:', e)
         } finally {
             set({ isLoading: false })
         }
@@ -68,7 +69,7 @@ export const useInvoiceStore = create<InvoiceState>()(
       addInvoice: async (invoice) => {
         const { user } = useAuthStore.getState()
         if (!user || user.role === 'viewer') {
-            console.error('Permission denied: Viewers cannot create invoices')
+            logger.error('Permission denied: Viewers cannot create invoices')
             return
         }
 
@@ -79,7 +80,14 @@ export const useInvoiceStore = create<InvoiceState>()(
         })
         
         // 1. Save Local
-        await window.ipcRenderer.invoke('db:save-invoices', newInvoices)
+        try {
+            await window.ipcRenderer.invoke('db:save-invoices', newInvoices)
+        } catch (e) {
+            logger.error('Failed to save invoices locally', e)
+            // Revert state if local save fails? 
+            // For now, we keep the UI state but log the error. 
+            // Ideally we should show a toast notification.
+        }
 
         // 2. Sync Cloud
         try {
@@ -88,14 +96,14 @@ export const useInvoiceStore = create<InvoiceState>()(
                 created_at: new Date().toISOString()
             })
         } catch (e) {
-            console.error('Cloud sync failed', e)
+            logger.error('Cloud sync failed', e)
         }
       },
 
       updateInvoice: async (updatedFields) => {
         const { user } = useAuthStore.getState()
         if (!user || user.role === 'viewer') {
-            console.error('Permission denied: Viewers cannot update invoices')
+            logger.error('Permission denied: Viewers cannot update invoices')
             return
         }
 
@@ -113,7 +121,11 @@ export const useInvoiceStore = create<InvoiceState>()(
         })
 
         // 1. Save Local
-        await window.ipcRenderer.invoke('db:save-invoices', updatedList)
+        try {
+            await window.ipcRenderer.invoke('db:save-invoices', updatedList)
+        } catch (e) {
+            logger.error('Failed to save updated invoices locally', e)
+        }
 
         // 2. Sync Cloud
         try {
@@ -122,14 +134,14 @@ export const useInvoiceStore = create<InvoiceState>()(
                 .update(updatedFields)
                 .eq('id', currentInvoice.id)
         } catch (e) {
-            console.error('Failed to update invoice in cloud', e)
+            logger.error('Failed to update invoice in cloud', e)
         }
       },
 
       deleteInvoice: async (id) => {
         const { user } = useAuthStore.getState()
         if (user?.role !== 'admin') {
-            console.error('Permission denied: Only admins can delete invoices')
+            logger.error('Permission denied: Only admins can delete invoices')
             return
         }
 
@@ -141,13 +153,17 @@ export const useInvoiceStore = create<InvoiceState>()(
         }))
 
         // 1. Save Local
-        await window.ipcRenderer.invoke('db:save-invoices', updatedList)
+        try {
+            await window.ipcRenderer.invoke('db:save-invoices', updatedList)
+        } catch (e) {
+            logger.error('Failed to save invoices locally after deletion', e)
+        }
 
         // 2. Sync Cloud
         try {
             await supabase.from('invoices').delete().eq('id', id)
         } catch (e) {
-            console.error('Failed to delete invoice from cloud', e)
+            logger.error('Failed to delete invoice from cloud', e)
         }
       },
 

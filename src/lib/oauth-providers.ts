@@ -157,7 +157,8 @@ export function getOAuthProvider(providerId: string): OAuthProvider | null {
  */
 export function supportsOAuth(providerId: string): boolean {
   const provider = getOAuthProvider(providerId)
-  return provider?.supportsOAuth || false
+  // Only support OAuth if explicitly enabled AND clientId is configured
+  return !!(provider?.supportsOAuth && provider?.clientId)
 }
 
 /**

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { logger } from '@/lib/logger'
 
 export interface CalendarEvent {
   id: string
@@ -25,25 +26,44 @@ export const useCalendarStore = create<CalendarState>()(
     (set, get) => ({
       events: [],
       
-      addEvent: (event) => set((state) => ({
-        events: [
-          ...state.events,
-          {
+      addEvent: (event) => {
+        try {
+          const newEvent = {
             ...event,
             id: crypto.randomUUID()
           }
-        ]
-      })),
+          set((state) => ({
+            events: [...state.events, newEvent]
+          }))
+          logger.info('Calendar event added', { id: newEvent.id, title: newEvent.title })
+        } catch (error) {
+          logger.error('Failed to add calendar event', error)
+        }
+      },
 
-      updateEvent: (id, updates) => set((state) => ({
-        events: state.events.map(e => 
-          e.id === id ? { ...e, ...updates } : e
-        )
-      })),
+      updateEvent: (id, updates) => {
+        try {
+          set((state) => ({
+            events: state.events.map(e => 
+              e.id === id ? { ...e, ...updates } : e
+            )
+          }))
+          logger.info('Calendar event updated', { id })
+        } catch (error) {
+          logger.error('Failed to update calendar event', error)
+        }
+      },
 
-      removeEvent: (id) => set((state) => ({
-        events: state.events.filter(e => e.id !== id)
-      })),
+      removeEvent: (id) => {
+        try {
+          set((state) => ({
+            events: state.events.filter(e => e.id !== id)
+          }))
+          logger.info('Calendar event removed', { id })
+        } catch (error) {
+          logger.error('Failed to remove calendar event', error)
+        }
+      },
 
       getEventsByDateRange: (start, end) => {
         return get().events.filter(e => 

@@ -25,15 +25,47 @@ export function setupMailHandlers() {
     }
   })
 
-  // Fetch Emails (Basic IMAP) - Disabled for now due to imap-simple dependency issues
+  // Fetch Emails (Basic IMAP)
   ipcMain.handle('mail:fetch', async (_, { config, limit = 10 }) => {
     try {
-      // TODO: Re-enable when imap-simple is properly configured
-      console.warn('IMAP fetch is currently disabled. Install imap-simple to enable.')
-      return { 
-        success: false, 
-        error: 'IMAP functionality is currently disabled. Please configure imap-simple dependency.' 
+      const imaps = require('imap-simple')
+      
+      const connection = await imaps.connect({
+        imap: {
+          user: config.user,
+          password: config.pass,
+          host: config.host,
+          port: config.port || 993,
+          tls: config.secure !== false,
+          authTimeout: 3000
+        }
+      })
+
+      await connection.openBox('INBOX')
+      
+      const searchCriteria = ['UNSEEN']
+      const fetchOptions = {
+        bodies: ['HEADER', 'TEXT'],
+        markSeen: false
       }
+
+      const messages = await connection.search(searchCriteria, fetchOptions)
+      
+      // Transform messages to simple format
+      const emails = messages.slice(0, limit).map((msg: any) => {
+        const header = msg.parts.find((p: any) => p.which === 'HEADER')
+        const body = msg.parts.find((p: any) => p.which === 'TEXT')
+        return {
+          id: msg.attributes.uid,
+          from: header?.body.from[0],
+          subject: header?.body.subject[0],
+          date: header?.body.date[0],
+          body: body?.body
+        }
+      })
+
+      connection.end()
+      return { success: true, emails }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       console.error('Mail Fetch Error:', error)

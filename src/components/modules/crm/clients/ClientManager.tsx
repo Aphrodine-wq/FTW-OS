@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Search, Edit, Mail, Phone, ArrowLeft, Trash2, MapPin } from 'lucide-react'
+import { Plus, Search, Edit, Mail, Phone, ArrowLeft, Trash2, MapPin, Upload } from 'lucide-react'
+import Papa from 'papaparse'
 import { Client, Invoice } from '@/types/invoice'
 import { useToast } from '@/components/ui/use-toast'
 import { format } from 'date-fns'
@@ -58,6 +59,26 @@ export function ClientManager() {
     })
   }
 
+  const handleDelete = async (client: Client, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm(`Are you sure you want to delete ${client.name}?`)) return
+
+    try {
+      const updated = clients.filter(c => c.id !== client.id)
+      await window.ipcRenderer.invoke('db:save-clients', updated)
+      setClients(updated)
+      if (selectedClient?.id === client.id) setSelectedClient(null)
+      toast({ title: 'Client Deleted', description: `${client.name} has been removed.` })
+    } catch (error) {
+      logger.error('Failed to delete client', error)
+      toast({
+        title: "Error Deleting Client",
+        description: "Could not delete client.",
+        variant: "destructive"
+      })
+    }
+  }
+
   // CRM Logic
   const getClientStats = (clientId: string) => {
     const clientInvoices = invoices.filter(inv => inv.clientId === clientId || inv.clientId === clients.find(c => c.id === clientId)?.name)
@@ -82,6 +103,54 @@ export function ClientManager() {
       return 0
     })
 
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // @ts-ignore
+    Papa.parse(file, {
+      header: true,
+      complete: async (results: any) => {
+        try {
+          if (results.data && results.data.length > 0) {
+             const newClients = results.data.map((row: any) => ({
+               id: Math.random().toString(36).substr(2, 9),
+               name: row.Name || row.name || 'Unknown',
+               email: row.Email || row.email || '',
+               phone: row.Phone || row.phone || '',
+               company: row.Company || row.company || '',
+             status: 'active',
+             tags: (row.Tags || row.tags || '').split(',').map((t: string) => t.trim()).filter(Boolean),
+             address: {
+                street: row.Street || row.Address || '',
+                city: row.City || '',
+                state: row.State || '',
+                zip: row.Zip || ''
+             }
+           })).filter((c: any) => c.name !== 'Unknown')
+           
+           const current = await window.ipcRenderer.invoke('db:get-clients') || []
+           await window.ipcRenderer.invoke('db:save-clients', [...current, ...newClients])
+           
+           const updated = await window.ipcRenderer.invoke('db:get-clients')
+           setClients(updated)
+           toast({
+             title: "Clients Imported",
+             description: `${newClients.length} clients imported.`
+           })
+        }
+      } catch (error) {
+        logger.error('Failed to import clients', error)
+        toast({
+          title: "Import Failed",
+          description: "Could not import clients from CSV.",
+          variant: "destructive"
+        })
+      }
+      }
+    })
+  }
+
   return (
     <div className="space-y-6 h-full flex flex-col">
       <AnimatePresence mode="wait">
@@ -97,9 +166,15 @@ export function ClientManager() {
                 <h2 className="text-2xl font-bold tracking-tight">Clients</h2>
                 <p className="text-muted-foreground">Manage your relationships</p>
               </div>
-              <Button onClick={() => { setCurrentClient({}); setIsEditing(true) }}>
-                <Plus className="mr-2 h-4 w-4" /> Add Client
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => document.getElementById('client-csv-upload')?.click()}>
+                  <Upload className="mr-2 h-4 w-4" /> Import CSV
+                </Button>
+                <input type="file" id="client-csv-upload" className="hidden" accept=".csv" onChange={handleImportCSV} />
+                <Button onClick={() => { setCurrentClient({}); setIsEditing(true) }}>
+                  <Plus className="mr-2 h-4 w-4" /> Add Client
+                </Button>
+              </div>
             </div>
 
             <div className="flex gap-4">
@@ -148,16 +223,7 @@ export function ClientManager() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
-                                onClick={async (e) => {
-                                  e.stopPropagation()
-                                  if (confirm(`Are you sure you want to delete ${client.name}?`)) {
-                                    const updated = clients.filter(c => c.id !== client.id)
-                                    await window.ipcRenderer.invoke('db:save-clients', updated)
-                                    setClients(updated)
-                                    if (selectedClient?.id === client.id) setSelectedClient(null)
-                                    toast({ title: 'Client Deleted', description: `${client.name} has been removed.` })
-                                  }
-                                }}
+                                onClick={(e) => handleDelete(client, e)}
                                 title="Delete Client"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -397,6 +463,7 @@ export function ClientManager() {
                       const base = currentClient.address || { street: '', city: '', state: '', zip: '', country: '' };
                       setCurrentClient({
                         ...currentClient,
+
                         address: { ...base, state: e.target.value }
                       });
                     }}
