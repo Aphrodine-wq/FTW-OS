@@ -4,7 +4,7 @@ import '@/styles/themes.css'
 
 // Lazy load ErrorBoundary to avoid circular deps
 const ErrorBoundary = lazy(() => import('@/components/ErrorBoundary').then(m => ({ default: m.ErrorBoundary })))
-const Toaster = lazy(() => import('@/components/ui/toaster').then(m => ({ default: m.Toaster })))
+import { Toaster } from 'sonner'
 
 // Import extracted modules
 import { ModuleRouter } from '@/lib/module-router'
@@ -24,8 +24,13 @@ import { QuickCapture } from '@/components/workflow/QuickCapture'
 import { ContextSidebar } from '@/components/layout/ContextSidebar'
 import { KeyboardShortcutsHelp } from '@/components/layout/KeyboardShortcutsHelp'
 // Lazy load workflow engine
-let workflowEngine: any = null
-const loadWorkflowEngine = async () => {
+type WorkflowEngine = {
+  initialize: () => void
+  cleanup: () => void
+}
+
+let workflowEngine: WorkflowEngine | null = null
+const loadWorkflowEngine = async (): Promise<WorkflowEngine> => {
   if (!workflowEngine) {
     const { workflowEngine: engine } = await import('@/services/workflow-engine')
     workflowEngine = engine
@@ -34,16 +39,16 @@ const loadWorkflowEngine = async () => {
 }
 
 // Inner App Component - Only rendered after stores are ready
-const AppInner = ({ storeState }: { storeState: any }) => {
+const AppInner = ({ storeState }: { storeState: NonNullable<ReturnType<typeof useStoreInitialization>['storeState']> }) => {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [cmdOpen, setCmdOpen] = useState(false)
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
   const [contextSidebarOpen, setContextSidebarOpen] = useState(true)
   const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false)
-  
+
   const { focusMode, toggleFocus } = useFocusMode()
   const [settingsOpen, setSettingsOpen] = useState(false)
-  
+
   // Initialize workflow engine (lazy loaded)
   useEffect(() => {
     let mounted = true
@@ -59,30 +64,18 @@ const AppInner = ({ storeState }: { storeState: any }) => {
       }
     }
   }, [])
-  
-  const { 
-    loadSettings, 
-    mode, 
-    background, 
-    customColor, 
-    radius,
-    fontFamily,
-    fontSize,
-    lineHeight,
-    isAuthenticated, 
-    initializeListener, 
+
+  const {
+    loadSettings,
+    mode,
+    isAuthenticated,
+    initializeListener,
     loadAllKeys
   } = storeState
 
   // Use theme hook
   const { themeClassName, themeStyle } = useTheme({
-    mode,
-    background,
-    customColor,
-    radius,
-    fontFamily,
-    fontSize,
-    lineHeight
+    mode
   })
 
   // Initialize auth listener
@@ -107,9 +100,14 @@ const AppInner = ({ storeState }: { storeState: any }) => {
   }, [])
 
   useEffect(() => {
-    window.addEventListener('navigate-to-tab' as any, handleNavigation)
-    return () => window.removeEventListener('navigate-to-tab' as any, handleNavigation)
-  }, [handleNavigation])
+    const eventName = 'navigate-to-tab' as keyof WindowEventMap
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<string>
+      if (customEvent.detail) setActiveTab(customEvent.detail)
+    }
+    window.addEventListener(eventName, handler)
+    return () => window.removeEventListener(eventName, handler)
+  }, [])
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -138,7 +136,8 @@ const AppInner = ({ storeState }: { storeState: any }) => {
     }
   ])
 
-  // Show login if not authenticated
+  // Auth removed - skip login screen
+  /*
   if (!isAuthenticated) {
     return (
       <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-slate-950"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>}>
@@ -146,14 +145,15 @@ const AppInner = ({ storeState }: { storeState: any }) => {
       </Suspense>
     )
   }
+  */
 
   return (
-    <div 
+    <div
       className={themeClassName}
       style={themeStyle}
     >
       <Suspense fallback={<div className="h-10 w-full bg-transparent" />}>
-        <TitleBar 
+        <TitleBar
           onCommandPaletteOpen={() => setCmdOpen(true)}
           onFocusModeToggle={toggleFocus}
           focusMode={focusMode}
@@ -178,7 +178,7 @@ const AppInner = ({ storeState }: { storeState: any }) => {
           <ContextSidebar
             activeTab={activeTab}
             onNewTask={() => setQuickCaptureOpen(true)}
-            onNewInvoice={() => {}}
+            onNewInvoice={() => { }}
             onNewExpense={() => setQuickCaptureOpen(true)}
             onViewCalendar={() => setActiveTab('calendar')}
             onClose={() => setContextSidebarOpen(false)}
@@ -187,10 +187,10 @@ const AppInner = ({ storeState }: { storeState: any }) => {
       </div>
 
       <Suspense fallback={null}>
-        <Toaster />
-        <CommandPalette 
-          onNavigate={setActiveTab} 
-          open={cmdOpen} 
+        <Toaster position="bottom-right" theme={mode === 'dark' ? 'dark' : 'light'} />
+        <CommandPalette
+          onNavigate={setActiveTab}
+          open={cmdOpen}
           setOpen={setCmdOpen}
           setQuickCaptureOpen={setQuickCaptureOpen}
         />
@@ -214,7 +214,7 @@ export function App() {
           <div className="text-center p-8">
             <div className="text-red-500 text-xl mb-4">Failed to initialize</div>
             <div className="text-slate-400 text-sm mb-4">{storeError.message}</div>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
@@ -224,7 +224,7 @@ export function App() {
         </div>
       )
     }
-    
+
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-slate-950">
         <Loader2 className="h-8 w-8 animate-spin text-blue-500" />

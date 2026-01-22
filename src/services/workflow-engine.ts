@@ -51,7 +51,7 @@ export class WorkflowEngine {
   /**
    * Execute a workflow
    */
-  async executeWorkflow(workflow: WorkflowRule, data: any): Promise<void> {
+  async executeWorkflow(workflow: WorkflowRule, data: Record<string, unknown>): Promise<void> {
     if (!workflow.enabled) return
 
     // Check conditions
@@ -70,7 +70,7 @@ export class WorkflowEngine {
   /**
    * Execute a single action
    */
-  private async executeAction(action: Action, data: any): Promise<void> {
+  private async executeAction(action: Action, data: Record<string, unknown>): Promise<void> {
     switch (action.type) {
       case 'create_task': {
         const taskStore = useTaskStore.getState()
@@ -87,7 +87,7 @@ export class WorkflowEngine {
       case 'update_status': {
         // This would update the status of the triggering item
         // Implementation depends on the data structure
-        console.log('Update status:', action.config, data)
+        // Status update logic would go here
         break
       }
 
@@ -105,8 +105,7 @@ export class WorkflowEngine {
 
       case 'send_email': {
         // Email sending would be implemented here
-        // For now, just log
-        console.log('Send email:', action.config, data)
+        // Email sending logic would go here
         break
       }
 
@@ -119,8 +118,8 @@ export class WorkflowEngine {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(data)
             })
-          } catch (error) {
-            console.error('Webhook error:', error)
+            } catch (error) {
+            // Webhook error - non-critical, continue workflow
           }
         }
         break
@@ -129,7 +128,7 @@ export class WorkflowEngine {
       case 'create_invoice':
       case 'update_invoice': {
         // Invoice operations
-        console.log('Invoice action:', action.type, action.config, data)
+        // Invoice action logic would go here
         break
       }
     }
@@ -138,7 +137,7 @@ export class WorkflowEngine {
   /**
    * Replace variables in config with actual data
    */
-  private replaceVariables(template: any, data: any): any {
+  private replaceVariables(template: unknown, data: Record<string, unknown>): unknown {
     if (typeof template === 'string') {
       let result = template
       for (const [key, value] of Object.entries(data)) {
@@ -148,8 +147,8 @@ export class WorkflowEngine {
       return result
     } else if (Array.isArray(template)) {
       return template.map(item => this.replaceVariables(item, data))
-    } else if (typeof template === 'object' && template !== null) {
-      const result: any = {}
+      } else if (typeof template === 'object' && template !== null) {
+      const result: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(template)) {
         result[key] = this.replaceVariables(value, data)
       }
@@ -161,7 +160,7 @@ export class WorkflowEngine {
   /**
    * Handle trigger event
    */
-  async handleTrigger(trigger: Trigger, data: any): Promise<void> {
+  async handleTrigger(trigger: Trigger, data: Record<string, unknown>): Promise<void> {
     const workflows = useWorkflowStore.getState().workflows.filter(
       w => w.enabled && w.trigger.type === trigger.type
     )

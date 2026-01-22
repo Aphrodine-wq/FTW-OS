@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { BusinessProfile } from '@/types/invoice'
+import { logger } from '@/lib/logger'
 
 interface SettingsStore {
   businessProfile: BusinessProfile | null
@@ -100,7 +101,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         }
       }
     } catch (error) {
-      console.error('Failed to load settings from backend, falling back to local storage:', error)
+      logger.error('Failed to load settings from backend, falling back to local storage', error)
       // Fallback to localStorage on backend failure
       const local = localStorage.getItem('invoiceforge-settings')
       if (local) {
@@ -112,7 +113,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
             integrations: { ...get().integrations, ...parsed.integrations }
           })
         } catch (e) {
-          console.error('Failed to parse local settings:', e)
+          logger.error('Failed to parse local settings', e)
         }
       }
     }
@@ -129,7 +130,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     try {
       await window.ipcRenderer.invoke('db:save-settings', data)
     } catch (error) {
-      console.error('Failed to save to Electron store:', error)
+      logger.error('Failed to save to Electron store', error)
     }
     // Backup to localStorage
     localStorage.setItem('invoiceforge-settings', JSON.stringify(data))

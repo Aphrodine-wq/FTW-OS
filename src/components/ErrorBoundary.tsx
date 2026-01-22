@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { RefreshCcw } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface Props {
   children?: ReactNode
@@ -23,11 +24,14 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo)
+    logger.error('Uncaught error', error, {
+      componentStack: errorInfo.componentStack,
+      errorName: error.name
+    })
     
     // Enhanced error logging for undefined variables
     if (error.message.includes('is not defined') || error.message.includes('is undefined')) {
-      console.error('[ErrorBoundary] Undefined variable error detected:', {
+      logger.error('[ErrorBoundary] Undefined variable error detected', error, {
         message: error.message,
         componentStack: errorInfo.componentStack,
         errorName: error.name,

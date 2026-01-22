@@ -1,0 +1,4 @@
+owner: your-github-username
+repo: ftw-os
+provider: github
+updaterCacheDirName: ftwos-updater

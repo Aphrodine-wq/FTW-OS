@@ -5,6 +5,7 @@
 
 import React, { Suspense, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { getModuleName } from './module-config'
 import { preloadModule, prefetchModule, getModuleImport } from './module-preloader'
 // Use dynamic imports instead of static import to avoid warnings
@@ -38,8 +39,8 @@ export const ModuleRouter: React.FC<ModuleRouterProps> = ({ activeTab, setActive
   }, [activeTab])
 
   // Dynamically load module components to avoid static import of lazy-modules
-  const [ModuleComponent, setModuleComponent] = React.useState<React.LazyExoticComponent<any> | null>(null)
-  
+  const [ModuleComponent, setModuleComponent] = React.useState<React.LazyExoticComponent<React.ComponentType<{ setActiveTab: (tab: string) => void }>> | null>(null)
+
   useEffect(() => {
     const loadModule = async () => {
       const moduleImport = getModuleImport(activeTab)
@@ -60,15 +61,26 @@ export const ModuleRouter: React.FC<ModuleRouterProps> = ({ activeTab, setActive
     }
     loadModule()
   }, [activeTab])
-  
+
   if (!ModuleComponent) {
     return <PageLoader module={moduleName} />
   }
-  
+
   return (
-    <Suspense fallback={<PageLoader module={moduleName} />}>
-      <ModuleComponent setActiveTab={setActiveTab} />
-    </Suspense>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
+        className="h-full w-full"
+      >
+        <Suspense fallback={<PageLoader module={moduleName} />}>
+          <ModuleComponent setActiveTab={setActiveTab} />
+        </Suspense>
+      </motion.div>
+    </AnimatePresence>
   )
 }
 

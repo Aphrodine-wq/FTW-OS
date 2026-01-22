@@ -6,21 +6,22 @@ import './index.css'
 // This ensures React is available to all chunks, preventing "React is undefined" errors
 // This is a fallback in case chunk loading order issues occur
 if (typeof window !== 'undefined') {
-  // @ts-ignore - Making React available globally for chunk compatibility
+  // Making React available globally for chunk compatibility
   window.React = React
   // Also make ReactDOM available for components that might need it
-  // @ts-ignore
   window.ReactDOM = ReactDOM
 }
 
+import { logger } from '@/lib/logger'
+
 // Debug logging
-console.log('[React] Initializing app...')
-console.log('[React] Root element:', document.getElementById('root'))
+logger.debug('[React] Initializing app...')
+logger.debug('[React] Root element:', { element: document.getElementById('root') })
 
 // Fallback App Component - Works even if main app fails
 const FallbackApp = ({ error }: { error: Error }) => {
   const [retryCount, setRetryCount] = React.useState(0)
-  
+
   const handleRetry = () => {
     setRetryCount(c => c + 1)
     // Clear any cached state that might be causing issues
@@ -28,7 +29,7 @@ const FallbackApp = ({ error }: { error: Error }) => {
       sessionStorage.clear()
       // Don't clear localStorage as it has user data
     } catch (e) {
-      console.error('Failed to clear session storage:', e)
+      logger.error('Failed to clear session storage', e)
     }
     window.location.reload()
   }
@@ -40,7 +41,7 @@ const FallbackApp = ({ error }: { error: Error }) => {
       localStorage.removeItem('fairtrade-widgets-v5')
       localStorage.removeItem('ftw-theme-storage')
     } catch (e) {
-      console.error('Failed to clear storage:', e)
+      logger.error('Failed to clear storage', e)
     }
     window.location.reload()
   }
@@ -183,11 +184,11 @@ const FallbackApp = ({ error }: { error: Error }) => {
 async function init() {
   const rootElement = document.getElementById('root')
   if (!rootElement) {
-    console.error('[React] Root element not found')
+    logger.error('[React] Root element not found')
     return
   }
 
-  console.log('[React] Creating root...')
+  logger.debug('[React] Creating root...')
   const root = ReactDOM.createRoot(rootElement)
 
   try {
@@ -197,41 +198,42 @@ async function init() {
     // Components that need Monaco should call initializeMonaco() explicitly
     // import('@/lib/monaco-config').then(({ initializeMonaco }) => {
     //   initializeMonaco().catch((error) => {
-    //     console.warn('[React] Monaco Editor pre-initialization failed (non-critical):', error)
+    //     logger.warn('[React] Monaco Editor pre-initialization failed (non-critical)', error)
     //   })
     // }).catch(() => {
     //   // Ignore if Monaco config fails to load
     // })
 
     // Dynamic import QueryClient first (no dependencies)
-    console.log('[React] Importing QueryClient...')
+    logger.debug('[React] Importing QueryClient...')
     const { queryClient } = await import('@/lib/query-client')
     const { QueryClientProvider } = await import('@tanstack/react-query')
 
     // Dynamic import ErrorBoundary
-    console.log('[React] Importing ErrorBoundary...')
+    logger.debug('[React] Importing ErrorBoundary...')
     const { ErrorBoundary } = await import('@/components/ErrorBoundary')
 
     // Dynamic import App with retry logic
-    console.log('[React] Importing App...')
+    logger.debug('[React] Importing App...')
     let AppWithSplash: React.ComponentType
-    
+
     try {
       const appModule = await import('./AppWithSplash')
       AppWithSplash = appModule.AppWithSplash
-    } catch (appError: any) {
-      console.error('[React] Failed to import AppWithSplash:', appError)
+    } catch (appError) {
+      logger.error('[React] Failed to import AppWithSplash', appError)
       // Try importing a simpler version
       try {
         const { App } = await import('./App')
         AppWithSplash = App
-      } catch (fallbackError: any) {
-        console.error('[React] Failed to import App:', fallbackError)
-        throw appError // Re-throw original error
+      } catch (fallbackError) {
+        logger.error('[React] Failed to import App', fallbackError)
+        const errorToThrow = appError instanceof Error ? appError : new Error(String(appError))
+        throw errorToThrow // Re-throw original error
       }
     }
-    
-    console.log('[React] Rendering...')
+
+    logger.debug('[React] Rendering...')
     root.render(
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
@@ -240,12 +242,13 @@ async function init() {
       </QueryClientProvider>
     )
 
-    console.log('[React] App rendered successfully')
-  } catch (error: any) {
-    console.error('[React] Fatal error:', error)
-    
+    logger.debug('[React] App rendered successfully')
+  } catch (error) {
+    logger.error('[React] Fatal error', error)
+
     // Render fallback UI
-    root.render(<FallbackApp error={error} />)
+    const errorObj = error instanceof Error ? error : new Error(String(error))
+    root.render(<FallbackApp error={errorObj} />)
   }
 }
 

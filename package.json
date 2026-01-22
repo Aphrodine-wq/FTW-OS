@@ -1,7 +1,7 @@
 {
   "name": "ftwos",
   "version": "1.0.14",
-  "description": "Full System for Dev Companies - Now with Neural Flow AI",
+  "description": "Full System for Dev Companies",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:react\" \"npm run dev:electron\"",
@@ -50,11 +50,13 @@
     "@radix-ui/react-toast": "^1.2.15",
     "@supabase/supabase-js": "^2.90.1",
     "@tanstack/react-query": "^5.90.16",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/dompurify": "^3.0.5",
     "@types/file-saver": "^2.0.7",
     "@types/lodash": "^4.17.21",
     "@types/qrcode": "^1.5.6",
     "@types/react-grid-layout": "^1.3.6",
+    "canvas-confetti": "^1.9.4",
     "chokidar": "^3.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -85,6 +87,7 @@
     "react-grid-layout": "^2.2.2",
     "react-markdown": "^10.1.0",
     "recharts": "^3.6.0",
+    "sonner": "^2.0.7",
     "sql.js": "^1.13.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.1",
@@ -96,6 +99,7 @@
   "devDependencies": {
     "@types/chokidar": "^1.7.5",
     "@types/node": "^20.11.24",
+    "@types/nodemailer": "^7.0.5",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
     "@types/sql.js": "^1.4.9",

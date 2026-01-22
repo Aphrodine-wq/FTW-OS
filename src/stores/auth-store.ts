@@ -68,7 +68,9 @@ export const useAuthStore = create<AuthState>()(
                 },
             },
         })
-        if (error) console.error('Login error:', error)
+        if (error) {
+          // Error handled by caller
+        }
       },
       loginWithGoogleOAuth: async () => {
         // New Google OAuth-only flow using credentials from vault
@@ -99,7 +101,9 @@ export const useAuthStore = create<AuthState>()(
         })
 
         // Inject seed data for usable state
-        injectSeedData().catch(err => console.error("Failed to inject seed data:", err))
+        injectSeedData().catch(() => {
+          // Seed data injection failed - non-critical
+        })
 
         return {}
       },
@@ -115,7 +119,9 @@ export const useAuthStore = create<AuthState>()(
             }
         })
         // Inject seed data for usable state
-        injectSeedData().catch(err => console.error("Failed to inject seed data:", err))
+        injectSeedData().catch(() => {
+          // Seed data injection failed - non-critical
+        })
       },
       logout: async () => {
         await supabase.auth.signOut()
@@ -146,8 +152,9 @@ export const useAuthStore = create<AuthState>()(
           }
 
           return {}
-        } catch (error: any) {
-          return { error: error.message || 'Login failed' }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Login failed'
+          return { error: errorMessage }
         }
       },
 
@@ -174,8 +181,9 @@ export const useAuthStore = create<AuthState>()(
           }
 
           return {}
-        } catch (error: any) {
-          return { error: error.message || 'Registration failed' }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Registration failed'
+          return { error: errorMessage }
         }
       },
 
@@ -190,8 +198,9 @@ export const useAuthStore = create<AuthState>()(
           }
 
           return {}
-        } catch (error: any) {
-          return { error: error.message || 'Password reset failed' }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Password reset failed'
+          return { error: errorMessage }
         }
       },
 

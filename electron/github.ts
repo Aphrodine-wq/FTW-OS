@@ -1,25 +1,24 @@
 import { ipcMain } from 'electron'
 
 export function setupGithubHandlers() {
-  ipcMain.handle('github:user', async (_, token) => {
+  ipcMain.handle('github:user', async (_, token: string) => {
     try {
-      // Use eval to bypass TypeScript CommonJS transformation of dynamic imports
-      // @ts-ignore
-      const { Octokit } = await (eval('import("@octokit/rest")') as Promise<typeof import("@octokit/rest")>)
+      // Dynamic import for Octokit
+      const { Octokit } = await import('@octokit/rest')
       const octokit = new Octokit({ auth: token })
       const { data } = await octokit.users.getAuthenticated()
       return data
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch GitHub user'
       console.error('GitHub User Error:', error)
-      throw new Error(error.message || 'Failed to fetch GitHub user')
+      throw new Error(errorMessage)
     }
   })
 
-  ipcMain.handle('github:repos', async (_, token) => {
+  ipcMain.handle('github:repos', async (_, token: string) => {
     try {
-      // Use eval to bypass TypeScript CommonJS transformation of dynamic imports
-      // @ts-ignore
-      const { Octokit } = await (eval('import("@octokit/rest")') as Promise<typeof import("@octokit/rest")>)
+      // Dynamic import for Octokit
+      const { Octokit } = await import('@octokit/rest')
       const octokit = new Octokit({ auth: token })
       const { data } = await octokit.repos.listForAuthenticatedUser({
         sort: 'updated',
@@ -27,39 +26,39 @@ export function setupGithubHandlers() {
         visibility: 'all'
       })
       return data
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch repositories'
       console.error('GitHub Repos Error:', error)
-      throw new Error(error.message || 'Failed to fetch repositories')
+      throw new Error(errorMessage)
     }
   })
 
-  ipcMain.handle('github:repo-stats', async (_, { token, owner, repo }) => {
+  ipcMain.handle('github:repo-stats', async (_, { token, owner, repo }: { token: string; owner: string; repo: string }) => {
     try {
-      // Use eval to bypass TypeScript CommonJS transformation of dynamic imports
-      // @ts-ignore
-      const { Octokit } = await (eval('import("@octokit/rest")') as Promise<typeof import("@octokit/rest")>)
+      // Dynamic import for Octokit
+      const { Octokit } = await import('@octokit/rest')
       const octokit = new Octokit({ auth: token })
       const { data } = await octokit.repos.listLanguages({ owner, repo })
       return data
-    } catch (error: any) {
+    } catch (error) {
         // Don't throw for stats, just return empty
-        console.warn(`Failed to fetch stats for ${owner}/${repo}:`, error.message)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.warn(`Failed to fetch stats for ${owner}/${repo}:`, errorMessage)
         return {}
     }
   })
 
-  ipcMain.handle('github:notifications', async (_, token) => {
+  ipcMain.handle('github:notifications', async (_, token: string) => {
     try {
-      // Use eval to bypass TypeScript CommonJS transformation of dynamic imports
-      // @ts-ignore
-      const { Octokit } = await (eval('import("@octokit/rest")') as Promise<typeof import("@octokit/rest")>)
+      // Dynamic import for Octokit
+      const { Octokit } = await import('@octokit/rest')
       const octokit = new Octokit({ auth: token })
       const { data } = await octokit.activity.listNotificationsForAuthenticatedUser({
         all: false, // only unread
         participating: true
       })
       return data
-    } catch (error: any) {
+    } catch (error) {
       console.error('GitHub Notifications Error:', error)
       return []
     }

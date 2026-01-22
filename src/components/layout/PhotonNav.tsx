@@ -68,7 +68,7 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
       if (isFocusMode) {
         // Show only if mouse is within 100px of top
         if (e.clientY < 100) {
-            // Logic handled by hover state of container
+          // Logic handled by hover state of container
         }
       }
     }
@@ -159,17 +159,17 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
   ]
 
   return (
-    <div 
-        className={cn(
-            "fixed top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500",
-            isFocusMode && !isExpanded ? "-translate-y-32 hover:translate-y-0" : "translate-y-0"
-        )}
+    <div
+      className={cn(
+        "fixed top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500",
+        isFocusMode && !isExpanded ? "-translate-y-32 hover:translate-y-0" : "translate-y-0"
+      )}
     >
       <motion.div
         initial={false}
         animate={{
-          width: isExpanded ? 800 : 280,
-          height: isExpanded ? 400 : 56,
+          width: isExpanded ? 720 : 240,
+          height: isExpanded ? 360 : 48,
           borderRadius: isExpanded ? 24 : 9999
         }}
         transition={{ type: "spring", stiffness: 350, damping: 30 }}
@@ -211,10 +211,10 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
               />
             </div>
             <div className="flex flex-col gap-0 leading-none">
-              <span className="font-black text-base tracking-tighter bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <span className="font-black text-sm tracking-tighter bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                 FTW
               </span>
-              <span className={cn("text-[10px] font-bold tracking-widest uppercase", mode === 'glass' ? "text-white/40" : "text-black/40")}>
+              <span className={cn("text-[9px] font-bold tracking-widest uppercase", mode === 'glass' ? "text-white/40" : "text-black/40")}>
                 OS v{__APP_VERSION__}
               </span>
             </div>
@@ -243,7 +243,7 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}>
                 <Sparkles className="h-4 w-4 text-purple-400" />
               </motion.div>
-              <span className={cn("text-sm font-semibold", mode === 'glass' ? "text-white/70" : "text-black/70")}>
+              <span className={cn("text-xs font-semibold", mode === 'glass' ? "text-white/70" : "text-black/70")}>
                 Navigation Hub
               </span>
             </div>
@@ -302,16 +302,16 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap flex-shrink-0",
                   activeSection === section.id
-                    ? (mode === 'glass' 
-                      ? `bg-gradient-to-r ${section.color} text-white shadow-lg` 
+                    ? (mode === 'glass'
+                      ? `bg-gradient-to-r ${section.color} text-white shadow-lg`
                       : `bg-gradient-to-r ${section.color} text-white shadow-lg`)
-                    : (mode === 'glass' 
-                      ? "bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" 
+                    : (mode === 'glass'
+                      ? "bg-white/5 hover:bg-white/10 text-white/60 hover:text-white"
                       : "bg-black/5 hover:bg-black/10 text-black/60 hover:text-black")
                 )}
               >
-                <section.icon className="h-4 w-4" />
-                <span className="text-sm font-semibold">{section.label}</span>
+                <section.icon className="h-3.5 w-3.5" />
+                <span className="text-xs font-semibold">{section.label}</span>
               </motion.button>
             ))}
           </div>
@@ -365,10 +365,10 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
                         )} />
                       </div>
                       <div>
-                        <div className={cn("text-sm font-semibold", mode === 'glass' ? "text-white" : "text-black")}>
+                        <div className={cn("text-xs font-semibold", mode === 'glass' ? "text-white" : "text-black")}>
                           {item.label}
                         </div>
-                        <div className={cn("text-xs", mode === 'glass' ? "text-white/40" : "text-black/40")}>
+                        <div className={cn("text-[10px]", mode === 'glass' ? "text-white/40" : "text-black/40")}>
                           {item.desc}
                         </div>
                       </div>

@@ -9,12 +9,14 @@ import {
 // NOTE: Components are NOT imported here to avoid circular dependencies.
 // Components are lazy-loaded in Dashboard.tsx via WIDGET_MAP.
 
+import type { LucideIcon } from 'lucide-react'
+
 export interface WidgetDefinition {
   type: string
   title: string
   description: string
   category: 'productivity' | 'finance' | 'dev' | 'system' | 'fun'
-  icon: any
+  icon: LucideIcon
   defaultSize: { w: number; h: number }
   premium?: boolean
 }

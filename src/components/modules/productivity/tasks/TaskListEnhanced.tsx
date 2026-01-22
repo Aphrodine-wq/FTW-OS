@@ -32,14 +32,14 @@ const statusColors = {
 export const TaskListEnhanced: React.FC = () => {
   const { tasks, addTask, updateTask, removeTask, moveTask } = useTaskStore()
   const { projects } = useProjectStore()
-  
+
   const [viewMode, setViewMode] = useState<'list' | 'board'>('board')
   const [filterStatus, setFilterStatus] = useState<string | null>(null)
   const [filterPriority, setFilterPriority] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedTask, setExpandedTask] = useState<string | null>(null)
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false)
-  
+
   // New Task Form State
   const [newTask, setNewTask] = useState<{
     title: string
@@ -57,10 +57,10 @@ export const TaskListEnhanced: React.FC = () => {
     if (!newTask.title.trim()) return
 
     addTask({
-        title: newTask.title,
-        priority: newTask.priority,
-        projectId: newTask.projectId === 'none' ? undefined : newTask.projectId,
-        dueDate: newTask.dueDate ? new Date(newTask.dueDate) : undefined
+      title: newTask.title,
+      priority: newTask.priority,
+      projectId: newTask.projectId === 'none' ? undefined : newTask.projectId,
+      dueDate: newTask.dueDate ? new Date(newTask.dueDate) : undefined
     })
 
     setNewTask({ title: '', priority: 'medium', projectId: 'none', dueDate: '' })
@@ -156,10 +156,10 @@ export const TaskListEnhanced: React.FC = () => {
                 {task.title}
               </h4>
               {project && (
-                  <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-                      <Folder className="w-3 h-3" />
-                      {project.name}
-                  </div>
+                <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                  <Folder className="w-3 h-3" />
+                  {project.name}
+                </div>
               )}
             </div>
 
@@ -349,73 +349,73 @@ export const TaskListEnhanced: React.FC = () => {
                 <LayoutList className="w-4 h-4" />
               </button>
             </div>
-            
+
             <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
-                <DialogTrigger asChild>
-                    <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
-                    >
-                    <Plus className="w-6 h-6" />
-                    </motion.button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create New Task</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Task Title</label>
-                            <Input 
-                                value={newTask.title}
-                                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                                placeholder="What needs to be done?"
-                            />
-                        </div>
+              <DialogTrigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
+                >
+                  <Plus className="w-6 h-6" />
+                </motion.button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Task</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Task Title</label>
+                    <Input
+                      value={newTask.title}
+                      onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                      placeholder="What needs to be done?"
+                    />
+                  </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Priority</label>
-                                <Select value={newTask.priority} onValueChange={(v: any) => setNewTask({ ...newTask, priority: v })}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Due Date</label>
-                                <Input 
-                                    type="date"
-                                    value={newTask.dueDate}
-                                    onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Project</label>
-                            <Select value={newTask.projectId} onValueChange={(v) => setNewTask({ ...newTask, projectId: v })}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a project..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">No Project</SelectItem>
-                                    {projects.map(p => (
-                                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <Button className="w-full" onClick={handleCreateTask}>Create Task</Button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Priority</label>
+                      <Select value={newTask.priority} onValueChange={(v: any) => setNewTask({ ...newTask, priority: v })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                </DialogContent>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Due Date</label>
+                      <Input
+                        type="date"
+                        value={newTask.dueDate}
+                        onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Project</label>
+                    <Select value={newTask.projectId} onValueChange={(v) => setNewTask({ ...newTask, projectId: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a project..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Project</SelectItem>
+                        {projects.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button className="w-full" onClick={handleCreateTask}>Create Task</Button>
+                </div>
+              </DialogContent>
             </Dialog>
           </div>
         </div>
@@ -509,10 +509,10 @@ export const TaskListEnhanced: React.FC = () => {
                       )}
                     >
                       <h3 className="font-semibold text-sm text-gray-600 dark:text-gray-400 mb-1 uppercase tracking-wide flex justify-between">
-                        <span>{status === 'in_progress' ? '🚀 In Progress' : status === 'todo' ? '📋 Todo' : '✅ Done'}</span>
+                        <span>{status === 'in_progress' ? 'In Progress' : status === 'todo' ? 'Todo' : 'Done'}</span>
                         <span className="text-xs opacity-70">({groupedTasks[status].length})</span>
                       </h3>
-                      
+
                       <div className="space-y-3 flex-1 min-h-[100px]">
                         {groupedTasks[status].map((task: Task, index: number) => (
                           <Draggable key={task.id} draggableId={task.id} index={index}>

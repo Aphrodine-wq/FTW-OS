@@ -327,7 +327,7 @@ class XpService {
           rarity: 'common' as const,
           points: 10,
           requirements: { tasks_completed: 1 },
-          icon: '🎯'
+          icon: 'target'
         },
         {
           name: 'Task Master',
@@ -336,7 +336,7 @@ class XpService {
           rarity: 'rare' as const,
           points: 50,
           requirements: { tasks_completed: 100 },
-          icon: '⚡'
+          icon: 'zap'
         },
         {
           name: 'Productivity Legend',
@@ -345,7 +345,7 @@ class XpService {
           rarity: 'legendary' as const,
           points: 200,
           requirements: { tasks_completed: 1000 },
-          icon: '👑'
+          icon: 'crown'
         },
 
         // Financial achievements
@@ -356,7 +356,7 @@ class XpService {
           rarity: 'common' as const,
           points: 15,
           requirements: { invoices_created: 1 },
-          icon: '💰'
+          icon: 'money'
         },
         {
           name: 'Revenue Generator',
@@ -365,7 +365,7 @@ class XpService {
           rarity: 'epic' as const,
           points: 100,
           requirements: { revenue_generated: 10000 },
-          icon: '🚀'
+          icon: 'rocket'
         },
 
         // Client achievements
@@ -376,7 +376,7 @@ class XpService {
           rarity: 'rare' as const,
           points: 30,
           requirements: { clients_added: 10 },
-          icon: '🤝'
+          icon: 'handshake'
         },
 
         // Time tracking achievements
@@ -387,7 +387,7 @@ class XpService {
           rarity: 'rare' as const,
           points: 40,
           requirements: { hours_logged: 100 },
-          icon: '⏰'
+          icon: 'clock'
         },
 
         // Social achievements
@@ -398,7 +398,7 @@ class XpService {
           rarity: 'rare' as const,
           points: 35,
           requirements: { collaborations: 50 },
-          icon: '👥'
+          icon: 'users'
         },
 
         // Special achievements
@@ -409,7 +409,7 @@ class XpService {
           rarity: 'rare' as const,
           points: 25,
           requirements: { consecutive_logins: 7 },
-          icon: '🐦'
+          icon: 'bird'
         },
         {
           name: 'Centurion',
@@ -418,7 +418,7 @@ class XpService {
           rarity: 'legendary' as const,
           points: 500,
           requirements: { level_reached: 100 },
-          icon: '💯'
+          icon: 'hundred'
         }
       ]
 

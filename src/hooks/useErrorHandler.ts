@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
-import { useToast } from '@/hooks/useToast'
+import { useToast } from '@/components/ui/use-toast'
+import { logger } from '@/lib/logger'
 
 export interface ErrorOptions {
   /**
@@ -44,7 +45,7 @@ export const useErrorHandler = () => {
       const err = error instanceof Error ? error : new Error(String(error))
 
       if (log) {
-        console.error(`[${title}]`, err)
+        logger.error(`[${title}]`, err)
       }
 
       // Show toast notification

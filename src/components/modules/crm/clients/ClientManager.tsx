@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Search, Edit, Mail, Phone, ArrowLeft } from 'lucide-react'
+import { Plus, Search, Edit, Mail, Phone, ArrowLeft, Trash2, MapPin } from 'lucide-react'
 import { Client, Invoice } from '@/types/invoice'
 import { useToast } from '@/components/ui/use-toast'
 import { format } from 'date-fns'
@@ -51,7 +51,7 @@ export function ClientManager() {
     setIsEditing(false)
     setCurrentClient({})
     if (selectedClient && selectedClient.id === newClient.id) setSelectedClient(newClient)
-    
+
     toast({
       title: "Client Saved",
       description: `${newClient.name} has been saved.`
@@ -67,8 +67,8 @@ export function ClientManager() {
   }
 
   const filteredClients = clients
-    .filter(c => 
-      c.name.toLowerCase().includes(search.toLowerCase()) || 
+    .filter(c =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.email?.toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => {
@@ -86,7 +86,7 @@ export function ClientManager() {
     <div className="space-y-6 h-full flex flex-col">
       <AnimatePresence mode="wait">
         {!selectedClient ? (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -112,7 +112,7 @@ export function ClientManager() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <select 
+              <select
                 className="p-2 border rounded-md bg-background"
                 value={sortField}
                 onChange={(e) => setSortField(e.target.value as any)}
@@ -141,9 +141,27 @@ export function ClientManager() {
                               {client.name.charAt(0)}
                             </div>
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setCurrentClient(client); setIsEditing(true) }}>
-                                  <Edit className="h-4 w-4" />
-                               </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setCurrentClient(client); setIsEditing(true) }}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                                onClick={async (e) => {
+                                  e.stopPropagation()
+                                  if (confirm(`Are you sure you want to delete ${client.name}?`)) {
+                                    const updated = clients.filter(c => c.id !== client.id)
+                                    await window.ipcRenderer.invoke('db:save-clients', updated)
+                                    setClients(updated)
+                                    if (selectedClient?.id === client.id) setSelectedClient(null)
+                                    toast({ title: 'Client Deleted', description: `${client.name} has been removed.` })
+                                  }
+                                }}
+                                title="Delete Client"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                           <h3 className="font-bold text-lg mb-1 truncate">{client.name}</h3>
@@ -178,7 +196,7 @@ export function ClientManager() {
             )}
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
@@ -207,7 +225,7 @@ export function ClientManager() {
                     <span>{selectedClient.phone || 'N/A'}</span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="h-4 w-4 mt-1 text-muted-foreground">📍</div>
+                    <MapPin className="h-4 w-4 mt-1 text-muted-foreground" />
                     <div>
                       <p>{selectedClient.address?.street}</p>
                       <p>{selectedClient.address?.city}, {selectedClient.address?.state} {selectedClient.address?.zip}</p>
@@ -248,61 +266,61 @@ export function ClientManager() {
 
                 {/* Tabs */}
                 <div className="space-y-4">
-                    <div className="flex gap-4 border-b">
-                        <button className="px-4 py-2 border-b-2 border-blue-500 font-medium text-blue-600">Invoices</button>
-                        <button className="px-4 py-2 text-muted-foreground hover:text-foreground">Projects</button>
-                        <button className="px-4 py-2 text-muted-foreground hover:text-foreground">Notes</button>
-                    </div>
+                  <div className="flex gap-4 border-b">
+                    <button className="px-4 py-2 border-b-2 border-blue-500 font-medium text-blue-600">Invoices</button>
+                    <button className="px-4 py-2 text-muted-foreground hover:text-foreground">Projects</button>
+                    <button className="px-4 py-2 text-muted-foreground hover:text-foreground">Notes</button>
+                  </div>
 
-                    {/* Invoice List (Existing) */}
-                    <Card className="flex-1">
-                      <CardHeader>
-                        <CardTitle>Invoice History</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {invoices
-                            .filter(inv => inv.clientId === selectedClient.id || inv.clientId === selectedClient.name)
-                            .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime())
-                            .map(inv => (
-                              <div key={inv.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50">
-                                <div className="flex items-center gap-3">
-                                  <div className={`h-2 w-2 rounded-full ${inv.status === 'paid' ? 'bg-green-500' : 'bg-orange-500'}`} />
-                                  <div>
-                                    <p className="font-medium">#{inv.invoiceNumber}</p>
-                                    <p className="text-xs text-muted-foreground">{format(new Date(inv.issueDate), 'MMM dd, yyyy')}</p>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <p className="font-bold">
-                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: inv.currency }).format(inv.total)}
-                                  </p>
-                                  <p className="text-xs uppercase font-medium text-muted-foreground">{inv.status}</p>
+                  {/* Invoice List (Existing) */}
+                  <Card className="flex-1">
+                    <CardHeader>
+                      <CardTitle>Invoice History</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {invoices
+                          .filter(inv => inv.clientId === selectedClient.id || inv.clientId === selectedClient.name)
+                          .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime())
+                          .map(inv => (
+                            <div key={inv.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50">
+                              <div className="flex items-center gap-3">
+                                <div className={`h-2 w-2 rounded-full ${inv.status === 'paid' ? 'bg-green-500' : 'bg-orange-500'}`} />
+                                <div>
+                                  <p className="font-medium">#{inv.invoiceNumber}</p>
+                                  <p className="text-xs text-muted-foreground">{format(new Date(inv.issueDate), 'MMM dd, yyyy')}</p>
                                 </div>
                               </div>
-                            ))}
-                            {invoices.filter(inv => inv.clientId === selectedClient.id || inv.clientId === selectedClient.name).length === 0 && (
-                              <div className="text-center py-8 text-muted-foreground">No invoices found</div>
-                            )}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Quick Notes Area */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Client Notes</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <textarea 
-                                className="w-full h-32 p-3 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                placeholder="Add private notes about this client (preferences, meeting notes, etc)..."
-                            />
-                            <div className="flex justify-end mt-2">
-                                <Button size="sm">Save Notes</Button>
+                              <div className="text-right">
+                                <p className="font-bold">
+                                  {new Intl.NumberFormat('en-US', { style: 'currency', currency: inv.currency }).format(inv.total)}
+                                </p>
+                                <p className="text-xs uppercase font-medium text-muted-foreground">{inv.status}</p>
+                              </div>
                             </div>
-                        </CardContent>
-                    </Card>
+                          ))}
+                        {invoices.filter(inv => inv.clientId === selectedClient.id || inv.clientId === selectedClient.name).length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">No invoices found</div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Quick Notes Area */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Client Notes</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <textarea
+                        className="w-full h-32 p-3 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        placeholder="Add private notes about this client (preferences, meeting notes, etc)..."
+                      />
+                      <div className="flex justify-end mt-2">
+                        <Button size="sm">Save Notes</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
@@ -320,65 +338,65 @@ export function ClientManager() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Name</label>
-                <input 
-                  className="w-full p-2 border rounded-md" 
+                <input
+                  className="w-full p-2 border rounded-md"
                   value={currentClient.name || ''}
-                  onChange={(e) => setCurrentClient({...currentClient, name: e.target.value})}
+                  onChange={(e) => setCurrentClient({ ...currentClient, name: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>
-                  <input 
-                    className="w-full p-2 border rounded-md" 
+                  <input
+                    className="w-full p-2 border rounded-md"
                     value={currentClient.email || ''}
-                    onChange={(e) => setCurrentClient({...currentClient, email: e.target.value})}
+                    onChange={(e) => setCurrentClient({ ...currentClient, email: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Phone</label>
-                  <input 
-                    className="w-full p-2 border rounded-md" 
+                  <input
+                    className="w-full p-2 border rounded-md"
                     value={currentClient.phone || ''}
-                    onChange={(e) => setCurrentClient({...currentClient, phone: e.target.value})}
+                    onChange={(e) => setCurrentClient({ ...currentClient, phone: e.target.value })}
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Address</label>
-                <input 
-                  className="w-full p-2 border rounded-md mb-2" 
+                <input
+                  className="w-full p-2 border rounded-md mb-2"
                   placeholder="Street"
                   value={currentClient.address?.street || ''}
                   onChange={(e) => {
                     const base = currentClient.address || { street: '', city: '', state: '', zip: '', country: '' };
                     setCurrentClient({
-                      ...currentClient, 
+                      ...currentClient,
                       address: { ...base, street: e.target.value }
                     });
                   }}
                 />
                 <div className="grid grid-cols-2 gap-2">
-                  <input 
-                    className="w-full p-2 border rounded-md" 
+                  <input
+                    className="w-full p-2 border rounded-md"
                     placeholder="City"
                     value={currentClient.address?.city || ''}
                     onChange={(e) => {
                       const base = currentClient.address || { street: '', city: '', state: '', zip: '', country: '' };
                       setCurrentClient({
-                        ...currentClient, 
+                        ...currentClient,
                         address: { ...base, city: e.target.value }
                       });
                     }}
                   />
-                  <input 
-                    className="w-full p-2 border rounded-md" 
+                  <input
+                    className="w-full p-2 border rounded-md"
                     placeholder="State"
                     value={currentClient.address?.state || ''}
                     onChange={(e) => {
                       const base = currentClient.address || { street: '', city: '', state: '', zip: '', country: '' };
                       setCurrentClient({
-                        ...currentClient, 
+                        ...currentClient,
                         address: { ...base, state: e.target.value }
                       });
                     }}

@@ -1,0 +1,105 @@
+# Quick Fix Guide for Build Errors
+
+## Current Issues Summary
+
+1. **App.tsx** - VSCode cache showing old errors (file is actually correct)
+2. **Dashboard.tsx** - Missing `setLayoutMode` function
+3. **PhotonNav.tsx** - Has syntax errors (but we're using PhotonNav.simple.tsx)
+
+## Quick Fixes
+
+### Fix 1: Clear VSCode Cache
+```bash
+# Close VSCode
+# Delete these folders:
+rm -rf .vscode
+rm -rf node_modules/.vite
+rm -rf dist
+rm -rf dist-electron
+
+# Reopen VSCode
+```
+
+### Fix 2: Dashboard.tsx - Add setLayoutMode wrapper
+
+Find line ~82 in Dashboard.tsx and add after the useThemeStore line:
+
+```typescript
+const { mode, background, layoutMode, setTheme } = useThemeStore()
+
+// Add this function:
+const setLayoutMode = (newMode: 'edit' | 'locked' | 'view') => {
+  setTheme({ layoutMode: newMode === 'view' ? 'locked' : newMode })
+}
+```
+
+### Fix 3: Remove draggableHandle prop
+
+Find line ~254 in Dashboard.tsx and remove this line:
+```typescript
+draggableHandle=".drag-handle"  // DELETE THIS LINE
+```
+
+### Fix 4: Fix onClick handlers
+
+Find lines ~463 and ~483 in Dashboard.tsx and wrap the resetLayout calls:
+
+```typescript
+// Change from:
+onClick={resetLayout}
+
+// To:
+onClick={() => resetLayout()}
+```
+
+### Fix 5: Ignore PhotonNav.tsx errors
+
+The file has errors but we're using PhotonNav.simple.tsx instead, so these errors don't affect the build.
+
+## Alternative: Use Pre-fixed Files
+
+If manual fixes are too complex, you can:
+
+1. **Backup current Dashboard.tsx**
+```bash
+cp src/components/modules/core/dashboard/Dashboard.tsx src/components/modules/core/dashboard/Dashboard.backup.tsx
+```
+
+2. **Create minimal Dashboard** (see MINIMAL_DASHBOARD.md)
+
+3. **Test build**
+```bash
+npm run build
+```
+
+## Testing After Fixes
+
+```bash
+# 1. Clear everything
+rm -rf node_modules/.vite dist dist-electron
+
+# 2. Build
+npm run build
+
+# 3. If successful, test dev mode
+npm run dev
+```
+
+## Expected Result
+
+After fixes, you should see:
+- ✅ No TypeScript errors
+- ✅ Build completes successfully  
+- ✅ dist/ folder created
+- ✅ Application runs in dev mode
+
+## If Still Failing
+
+Create a new issue with:
+1. Exact error messages
+2. Line numbers
+3. File contents around the error
+
+---
+
+**Note:** The Neural Flow widget implementation is complete and correct. The issues are only in the Dashboard integration layer.

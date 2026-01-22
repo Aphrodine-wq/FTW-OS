@@ -11,7 +11,9 @@ export function SpotifyWidget() {
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 bg-white/10 rounded-md flex items-center justify-center text-2xl">🎵</div>
+          <div className="h-12 w-12 bg-white/10 rounded-md flex items-center justify-center">
+            <Disc className="h-6 w-6" />
+          </div>
           <div className="overflow-hidden">
             <p className="font-bold text-sm truncate">Deep Focus Beats</p>
             <p className="text-xs text-white/70">Lofi Girl</p>
@@ -39,7 +41,9 @@ export function SteamWidget() {
           <span className="text-xs font-bold text-green-400">Online</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-blue-500/20 rounded flex items-center justify-center text-xl">🚀</div>
+          <div className="h-10 w-10 bg-blue-500/20 rounded flex items-center justify-center">
+            <Gamepad2 className="h-5 w-5" />
+          </div>
           <div className="flex-1">
             <p className="text-sm font-bold">Starfield</p>
             <p className="text-xs text-white/50">2.4 hrs last 2 weeks</p>

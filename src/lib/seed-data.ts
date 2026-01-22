@@ -3,7 +3,7 @@ import { addDays, subDays } from 'date-fns'
 
 // Feature flag to enable/disable seed data
 // Set to false for production to start with empty state
-export const ENABLE_SEED_DATA = true // TODO: Set to false for production
+export const ENABLE_SEED_DATA = false // Disabled for production
 
 const CLIENTS: Client[] = [
   { id: 'c1', name: 'Acme Corp', email: 'billing@acme.com', address: { street: '123 Tech Blvd', city: 'San Francisco', state: 'CA', zip: '94105', country: 'USA' } },
@@ -23,60 +23,8 @@ const LEADS: Lead[] = [
   { id: 'l4', name: 'Black Mesa', email: 'gordon@blackmesa.com', status: 'won', value: 12000, source: 'Conference', notes: 'Physics simulation engine', createdAt: new Date() },
 ]
 
+// Seed data injection disabled - removed for production
 export async function injectSeedData() {
-  // Check feature flag first
-  if (!ENABLE_SEED_DATA) {
-    console.log('Seed data disabled via feature flag')
-    return
-  }
-
-  const existingClients = await window.ipcRenderer.invoke('db:get-clients')
-  if (existingClients && existingClients.length > 0) return // Already seeded
-
-  console.log("Injecting massive seed data...")
-
-  // Generate 50 Invoices
-  const invoices: Invoice[] = []
-  for (let i = 0; i < 50; i++) {
-    const client = CLIENTS[i % CLIENTS.length]
-    const status = Math.random() > 0.7 ? 'paid' : Math.random() > 0.5 ? 'sent' : Math.random() > 0.3 ? 'overdue' : 'draft'
-    const total = Math.floor(Math.random() * 8000) + 500
-    
-    invoices.push({
-      id: `inv-${i}`,
-      invoiceNumber: `INV-2024-${1000+i}`,
-      clientId: client.name, // Using name for simplicity in this legacy schema
-      issueDate: subDays(new Date(), i * 3),
-      dueDate: addDays(new Date(), 30 - (i * 3)),
-      status: status as any,
-      total,
-      subtotal: total,
-      tax: 0,
-      currency: 'USD',
-      lineItems: [
-        { id: `li-${i}`, description: 'Professional Services', quantity: 1, rate: total, amount: total }
-      ],
-      notes: 'Thank you for your business.',
-      taxes: []
-    })
-  }
-
-  // Generate Tasks
-  const tasks: Task[] = []
-  for (let i = 0; i < 30; i++) {
-    tasks.push({
-      id: `t-${i}`,
-      title: `Task ${i}: ${['Update API', 'Fix CSS', 'Client Meeting', 'Database Migration', 'Unit Tests'][i % 5]}`,
-      status: Math.random() > 0.5 ? 'done' : Math.random() > 0.5 ? 'in_progress' : 'todo',
-      projectId: CLIENTS[i % CLIENTS.length].id,
-      createdAt: new Date()
-    })
-  }
-
-  await window.ipcRenderer.invoke('db:save-clients', CLIENTS)
-  await window.ipcRenderer.invoke('db:save-invoices', invoices)
-  await window.ipcRenderer.invoke('db:save-leads', LEADS)
-  await window.ipcRenderer.invoke('db:save-tasks', tasks)
-  
-  console.log("Seed data injected.")
+  // Feature disabled - no seed data will be injected
+  return
 }

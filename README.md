@@ -32,7 +32,7 @@ Simply double-click **`FTW-OS-Setup.exe`** in the root folder to launch the late
 FTW-OS is a comprehensive desktop environment built with **Electron**, **React**, **TypeScript**, and **Tailwind CSS**. It provides:
 
 ✅ **Modular Dashboard** - Customizable widget-based interface  
-✅ **Revolutionary Widgets** - AI-powered productivity tools  
+✅ **Smart Widgets** - Productivity tools  
 ✅ **API Integrations** - Weather, Crypto, News, and more  
 ✅ **Project Management** - CRM, invoicing, time tracking  
 ✅ **Developer Tools** - Terminal, file manager, code editor  
@@ -48,12 +48,6 @@ FTW-OS is a comprehensive desktop environment built with **Electron**, **React**
 - **Drag & Drop Layout** - Fully customizable grid system
 - **Widget Library** - Easy browsing and adding of new widgets
 - **Persistent Layouts** - Your configuration is saved automatically
-
-### Revolutionary Widgets
-- **Neural Flow** - AI-powered work pattern analyzer
-- **Revenue Reactor** - Nuclear-powered revenue intelligence
-- **Trae Coder** - Full-stack development environment (coming soon)
-- **Pressure Cooker** - Real-time stress monitoring
 
 ### Core Modules
 - **Finance** - Invoicing, expense tracking, ROI calculator

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FTWOS</title>
+  </head>
+  <body>
+    <div id="root">
+      <div style="height: 100vh; width: 100vw; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-family: sans-serif;">
+        INITIALIZING BOOT SEQUENCE...
+      </div>
+    </div>
+    <!-- Load Monaco Editor from CDN before app initialization -->
+    <!-- This prevents bundling issues and ensures proper initialization order -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs/loader.js"></script>
+    <script>
+        // Configure Monaco loader to use CDN
+        require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs' } });
+        
+        // Load Monaco Editor and make it available globally
+        require(['vs/editor/editor.main'], function() {
+            console.log('[Monaco] Loaded from CDN, available globally as window.monaco');
+            // Monaco is now available as window.monaco
+        });
+    </script>
+    <script>
+        console.log('INDEX.HTML LOADED');
+        
+        // Polyfills
+        window.global = window;
+        
+        function showError(type, msg, error) {
+            console.error(type, msg, error);
+            const errDiv = document.createElement('div');
+            errDiv.style.position = 'fixed';
+            errDiv.style.top = '0';
+            errDiv.style.left = '0';
+            errDiv.style.width = '100%';
+            errDiv.style.height = '100%';
+            errDiv.style.background = '#1a0000';
+            errDiv.style.color = '#ff9999';
+            errDiv.style.zIndex = '2147483647';
+            errDiv.style.padding = '20px';
+            errDiv.style.overflow = 'auto';
+            errDiv.style.fontFamily = 'monospace';
+            errDiv.innerHTML = `
+                <h2 style="color: #ff0000">${type}</h2>
+                <div style="font-size: 1.2em; margin-bottom: 10px;">${msg}</div>
+                <pre style="background: #330000; padding: 10px; border: 1px solid #660000;">${error?.stack || error}</pre>
+            `;
+            document.body.appendChild(errDiv);
+        }
+
+        window.onerror = function(msg, url, line, col, error) {
+            showError('Global Error (onerror)', msg, error);
+            return false;
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+            showError('Unhandled Promise Rejection', event.reason?.message || event.reason, event.reason);
+        });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

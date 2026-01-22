@@ -66,8 +66,8 @@ export const MODULE_PRIORITIES: Record<string, number> = {
 
 // Preload cache
 const preloadedModules = new Set<string>()
-const preloadPromises = new Map<string, Promise<any>>()
-const prefetchPromises = new Map<string, Promise<any>>()
+const preloadPromises = new Map<string, Promise<React.ComponentType<{ setActiveTab: (tab: string) => void }>>>()
+const prefetchPromises = new Map<string, Promise<React.ComponentType<{ setActiveTab: (tab: string) => void }>>>()
 // Track pending callbacks for cleanup
 const pendingCallbacks = new Map<string, number>()
 
@@ -76,7 +76,7 @@ const pendingCallbacks = new Map<string, number>()
  */
 export function getModuleCategory(moduleId: string): string {
   for (const [category, modules] of Object.entries(MODULE_CATEGORIES)) {
-    if (modules.includes(moduleId as any)) {
+    if (modules.includes(moduleId as (typeof modules)[number])) {
       return category
     }
   }
@@ -138,8 +138,8 @@ export function prefetchModule(moduleId: string): void {
 
   // Use requestIdleCallback if available, otherwise setTimeout
   const schedulePrefetch = () => {
-    if ('requestIdleCallback' in window) {
-      const callbackId = (window as any).requestIdleCallback(() => {
+      if ('requestIdleCallback' in window) {
+      const callbackId = (window as Window & { requestIdleCallback: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number }).requestIdleCallback(() => {
         pendingCallbacks.delete(moduleId)
         const promise = importFn().then(() => {
           preloadedModules.add(moduleId)
@@ -178,7 +178,7 @@ export function prefetchModule(moduleId: string): void {
 export function cancelPendingPrefetches(): void {
   pendingCallbacks.forEach((callbackId) => {
     if ('cancelIdleCallback' in window) {
-      (window as any).cancelIdleCallback(callbackId)
+      (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(callbackId)
     } else {
       clearTimeout(callbackId)
     }
@@ -217,7 +217,7 @@ export function preloadHighPriorityModules(): void {
 
   // Use requestIdleCallback for deferred modules
   if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => {
+    (window as Window & { requestIdleCallback: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number }).requestIdleCallback(() => {
       deferredPriorityModules.forEach(moduleId => prefetchModule(moduleId))
     }, { timeout: 5000 })
   } else {
@@ -228,11 +228,16 @@ export function preloadHighPriorityModules(): void {
 }
 
 /**
+ * Module component type
+ */
+type ModuleComponent = React.ComponentType<{ setActiveTab: (tab: string) => void }>
+
+/**
  * Get module import function
  */
-export function getModuleImport(moduleId: string): (() => Promise<any>) | null {
+export function getModuleImport(moduleId: string): (() => Promise<ModuleComponent>) | null {
   // Map module IDs to their lazy import paths
-  const moduleImports: Record<string, () => Promise<any>> = {
+  const moduleImports: Record<string, () => Promise<ModuleComponent>> = {
     dashboard: () => import('@/lib/lazy-modules').then(m => m.Dashboard),
     pulse: () => import('@/lib/lazy-modules').then(m => m.PulseDashboard),
     analytics: () => import('@/lib/lazy-modules').then(m => m.AnalyticsDashboard),

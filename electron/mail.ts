@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
-// @ts-ignore - nodemailer types not installed
-import nodemailer from 'nodemailer'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import nodemailer = require('nodemailer')
 
 export function setupMailHandlers() {
   // Send Email
@@ -18,9 +18,10 @@ export function setupMailHandlers() {
 
       const info = await transporter.sendMail(mailOptions)
       return { success: true, messageId: info.messageId }
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       console.error('Mail Send Error:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: errorMessage }
     }
   })
 
@@ -33,9 +34,10 @@ export function setupMailHandlers() {
         success: false, 
         error: 'IMAP functionality is currently disabled. Please configure imap-simple dependency.' 
       }
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       console.error('Mail Fetch Error:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: errorMessage }
     }
   })
 }

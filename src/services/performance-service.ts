@@ -70,7 +70,7 @@ class PerformanceService {
     
     // Warn if chunk load exceeds budget
     if (loadTime > this.BUDGETS.chunkLoad) {
-      console.warn(`Chunk "${chunkName}" loaded in ${loadTime}ms (exceeds budget of ${this.BUDGETS.chunkLoad}ms)`)
+      // Performance budget violation - could send to monitoring service
     }
   }
 
@@ -113,7 +113,7 @@ class PerformanceService {
     }
 
     if (violations.length > 0) {
-      console.warn('Performance budget violations:', violations)
+      // Performance budget violations - could send to monitoring service
     }
   }
 
@@ -255,7 +255,7 @@ class PerformanceService {
             const endTime = performance.now()
             const duration = endTime - startTime
 
-            console.log(`${componentName} render time: ${duration.toFixed(2)}ms`)
+            // Component render time tracked
 
             // Record if it's a slow render
             if (duration > 16.67) { // Slower than 60fps
@@ -277,7 +277,7 @@ class PerformanceService {
   trackApiCall(url: string, method: string, startTime: number, endTime: number, success: boolean): void {
     const duration = endTime - startTime
 
-    console.log(`${method} ${url}: ${duration.toFixed(2)}ms`)
+    // API call performance tracked
 
     // Record slow API calls
     if (duration > 1000) { // > 1 second

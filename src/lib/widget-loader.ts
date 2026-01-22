@@ -4,9 +4,13 @@
  */
 
 import React, { ComponentType } from 'react'
+import type { WidgetProps } from '@/types/widget'
+
+// Widget component type
+type WidgetComponent = ComponentType<WidgetProps>
 
 // Widget import map - organized by category for better chunking
-const WIDGET_IMPORTS: Record<string, () => Promise<{ default: ComponentType<any> }>> = {
+const WIDGET_IMPORTS: Record<string, () => Promise<{ default: WidgetComponent }>> = {
   // Core System Widgets
   'system-health': () => import('@/components/widgets/core/sector-b/SystemHealth').then(m => ({ default: m.SystemHealth })),
   'quick-roi': () => import('@/components/widgets/core/sector-a/QuickROIWidget').then(m => ({ default: m.QuickROIWidget })),
@@ -42,7 +46,7 @@ const WIDGET_IMPORTS: Record<string, () => Promise<{ default: ComponentType<any>
 
 // Widget preload cache
 const preloadedWidgets = new Set<string>()
-const preloadPromises = new Map<string, Promise<any>>()
+const preloadPromises = new Map<string, Promise<{ default: WidgetComponent }>>()
 
 /**
  * Preload a widget for faster rendering
@@ -75,7 +79,7 @@ export function preloadWidgets(types: string[]): void {
 /**
  * Get lazy component for a widget type
  */
-export function getWidgetComponent(type: string): React.LazyExoticComponent<ComponentType<any>> {
+export function getWidgetComponent(type: string): React.LazyExoticComponent<WidgetComponent> {
   const importFn = WIDGET_IMPORTS[type]
   
   if (!importFn) {

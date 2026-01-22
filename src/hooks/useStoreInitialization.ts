@@ -5,13 +5,24 @@
 
 import { useState, useEffect } from 'react'
 
+import type { UseBoundStore, StoreApi } from 'zustand'
+import type { SettingsStore as SettingsStoreType } from '@/stores/settings-store'
+import type { SecureSettingsStore as SecureSettingsStoreType } from '@/stores/secure-settings-store'
+import type { ThemeState } from '@/stores/theme-store'
+import type { AuthState } from '@/stores/auth-store'
+import type { AnimatePresenceProps } from 'framer-motion'
+
 // Deferred store imports to break circular dependency chain
-let useSettingsStore: any
-let useSecureSettings: any
-let useThemeStore: any
-let useAuthStore: any
-let AnimatePresence: any
-let motion: any
+type SettingsStore = UseBoundStore<StoreApi<SettingsStoreType>>
+type SecureSettingsStore = UseBoundStore<StoreApi<SecureSettingsStoreType>>
+type ThemeStore = UseBoundStore<StoreApi<ThemeState>>
+type AuthStore = UseBoundStore<StoreApi<AuthState>>
+
+let useSettingsStore: SettingsStore | undefined
+let useSecureSettings: SecureSettingsStore | undefined
+let useThemeStore: ThemeStore | undefined
+let useAuthStore: AuthStore | undefined
+let AnimatePresence: React.ComponentType<AnimatePresenceProps> | undefined
 
 /**
  * Initialize stores lazily - parallelized for faster loading
@@ -33,7 +44,6 @@ const initStores = async () => {
     }) : Promise.resolve(),
     !AnimatePresence ? import('framer-motion').then(m => {
       AnimatePresence = m.AnimatePresence
-      motion = m.motion
     }) : Promise.resolve(),
   ]
 
@@ -43,13 +53,7 @@ const initStores = async () => {
 
 export interface StoreState {
   loadSettings: () => void
-  mode: string
-  background: string
-  customColor?: string
-  radius: number
-  fontFamily?: 'default' | 'mono' | 'serif' | 'display'
-  fontSize?: 'xs' | 'sm' | 'base' | 'lg'
-  lineHeight?: 'tight' | 'normal' | 'relaxed'
+  mode: 'light' | 'dark'
   isAuthenticated: boolean
   initializeListener: () => (() => void) | undefined
   loadAllKeys: () => void
@@ -82,12 +86,6 @@ export const useStoreInitialization = () => {
         const initialState: StoreState = {
           loadSettings: settingsStore.loadSettings,
           mode: themeStore.mode,
-          background: themeStore.background,
-          customColor: themeStore.customColor,
-          radius: themeStore.radius,
-          fontFamily: themeStore.fontFamily,
-          fontSize: themeStore.fontSize,
-          lineHeight: themeStore.lineHeight,
           isAuthenticated: authStore.isAuthenticated,
           initializeListener: authStore.initializeListener,
           loadAllKeys: secureStore.loadAllKeys,
@@ -97,23 +95,17 @@ export const useStoreInitialization = () => {
         setStoreState(initialState)
 
         // Subscribe to store changes and store unsubscribe functions
-        const unsubTheme = useThemeStore.subscribe((state: any) => {
+        const unsubTheme = useThemeStore.subscribe((state) => {
           if (mounted) {
             setStoreState((prev: StoreState | null) => prev ? {
               ...prev,
-              mode: state.mode,
-              background: state.background,
-              customColor: state.customColor,
-              radius: state.radius,
-              fontFamily: state.fontFamily,
-              fontSize: state.fontSize,
-              lineHeight: state.lineHeight
+              mode: state.mode
             } : null)
           }
         })
         unsubscribeFns.push(unsubTheme)
 
-        const unsubAuth = useAuthStore.subscribe((state: any) => {
+        const unsubAuth = useAuthStore.subscribe((state) => {
           if (mounted) {
             setStoreState((prev: StoreState | null) => prev ? {
               ...prev,
@@ -124,9 +116,10 @@ export const useStoreInitialization = () => {
         unsubscribeFns.push(unsubAuth)
 
         setStoresReady(true)
-      } catch (error: any) {
-        console.error('[App] Failed to initialize stores:', error)
-        if (mounted) setStoreError(error)
+      } catch (error) {
+        const errorObj = error instanceof Error ? error : new Error(String(error))
+        console.error('[App] Failed to initialize stores:', errorObj)
+        if (mounted) setStoreError(errorObj)
       }
     }
 

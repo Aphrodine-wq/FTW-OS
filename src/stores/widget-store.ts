@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { Layout } from 'react-grid-layout'
 
 export interface WidgetConfig {
   id: string
@@ -14,7 +15,7 @@ interface WidgetState {
   availableWidgets: WidgetConfig[] // All possible widgets
   addWidget: (typeOrConfig: string | { type: string; x?: number; y?: number; w?: number; h?: number }) => void
   removeWidget: (id: string) => void
-  updateLayout: (layout: any[]) => void
+  updateLayout: (layout: Layout[]) => void
   resetLayout: () => void
 }
 
