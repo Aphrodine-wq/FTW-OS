@@ -60,31 +60,30 @@ export default defineConfig({
       // Monaco will be loaded from CDN instead
       external: ['monaco-editor'],
       output: {
-        // Optimized chunk splitting strategy for enterprise apps
+        // Simplified chunk splitting - React must be in same chunk as dependencies
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Critical path: React ecosystem - must load first
-            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
-              return 'vendor-react'
+            // Keep all React-related code together to prevent hook errors
+            if (
+              id.includes('react') || 
+              id.includes('react-dom') || 
+              id.includes('scheduler') ||
+              id.includes('zustand') ||
+              id.includes('@tanstack/react-query') ||
+              id.includes('@radix-ui') ||
+              id.includes('framer-motion') ||
+              id.includes('lucide-react') ||
+              id.includes('recharts') ||
+              id.includes('react-grid-layout') ||
+              id.includes('react-resizable') ||
+              id.includes('react-big-calendar') ||
+              id.includes('@hello-pangea/dnd') ||
+              id.includes('cmdk')
+            ) {
+              return 'vendor-react-ecosystem'
             }
-            // State management - load early
-            if (id.includes('zustand') || id.includes('@tanstack/react-query')) {
-              return 'vendor-state'
-            }
-            // UI framework essentials - load early
-            if (id.includes('@radix-ui') || id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
-              return 'vendor-ui'
-            }
-            // Animation library - used throughout
-            if (id.includes('framer-motion')) {
-              return 'vendor-animation'
-            }
-            // Icons - used throughout
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons'
-            }
-            // Backend/Auth - can load slightly deferred
-            if (id.includes('@supabase/supabase-js')) {
+            // Backend/Auth
+            if (id.includes('@supabase')) {
               return 'vendor-supabase'
             }
             // Heavy document generation libraries - lazy load
@@ -101,23 +100,19 @@ export default defineConfig({
             if (id.includes('xterm')) {
               return 'vendor-terminal'
             }
-            // Charts - lazy load
-            if (id.includes('recharts')) {
-              return 'vendor-charts'
+            // Calendar date libs
+            if (id.includes('moment') || id.includes('date-fns')) {
+              return 'vendor-dates'
             }
-            // Calendar - lazy load
-            if (id.includes('react-big-calendar') || id.includes('moment')) {
-              return 'vendor-calendar'
-            }
-            // Grid layout - lazy load
-            if (id.includes('react-grid-layout') || id.includes('react-resizable')) {
-              return 'vendor-grid'
-            }
-            // Monaco Editor is externalized, but just in case
+            // Monaco Editor is externalized
             if (id.includes('monaco-editor')) {
               return 'vendor-monaco'
             }
-            // Remaining vendor code
+            // SQL and data
+            if (id.includes('sql.js') || id.includes('papaparse')) {
+              return 'vendor-data'
+            }
+            // Everything else
             return 'vendor-misc'
           }
 

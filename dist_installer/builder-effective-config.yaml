@@ -1,0 +1,39 @@
+directories:
+  output: dist_installer
+  buildResources: resources
+appId: com.fairtradeworker.os
+productName: FairTradeWorker OS
+files:
+  - filter:
+      - dist_build/**/*
+      - dist-electron/**/*
+      - package.json
+asar: true
+asarUnpack:
+  - '**/node_modules/sql.js/**/*'
+  - '**/node_modules/@supabase/**/*'
+  - '**/*.dll'
+  - '**/*.node'
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icons/icon.ico
+  artifactName: FTW-OS-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: FairTradeWorker OS
+  installerIcon: resources/icons/icon.ico
+  uninstallerIcon: resources/icons/icon.ico
+  installerHeaderIcon: resources/icons/icon.ico
+  deleteAppDataOnUninstall: false
+publish:
+  provider: github
+  owner: Aphrodine-wq
+  repo: FTW-OS
+  releaseType: release
+electronVersion: 29.4.6

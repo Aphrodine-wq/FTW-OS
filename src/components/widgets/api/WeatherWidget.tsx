@@ -31,21 +31,11 @@ export const WeatherWidget = React.memo(function WeatherWidget() {
     try {
       setLoading(true)
       // Using OpenWeatherMap API - users need to add their API key in settings
-      const apiKey = localStorage.getItem('openweather_api_key') || 'demo'
+      const apiKey = localStorage.getItem('openweather_api_key')
       
-      if (apiKey === 'demo') {
-        // Demo data
-        setWeather({
-          temp: 72,
-          feels_like: 70,
-          humidity: 65,
-          pressure: 1013,
-          visibility: 10000,
-          wind_speed: 8,
-          description: 'Partly Cloudy',
-          icon: '02d',
-          city: 'San Francisco'
-        })
+      if (!apiKey) {
+        // No API key configured - show configuration prompt
+        setError('API key required')
         setLoading(false)
         return
       }
@@ -97,10 +87,15 @@ export const WeatherWidget = React.memo(function WeatherWidget() {
 
   if (error) {
     return (
-      <Card className="h-full flex flex-col items-center justify-center p-4">
-        <Cloud className="h-12 w-12 text-gray-400 mb-2" />
-        <p className="text-sm text-muted-foreground text-center">{error}</p>
-        <p className="text-xs text-muted-foreground mt-2">Add API key in Settings</p>
+      <Card className="h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-500/5 to-transparent">
+        <Cloud className="h-12 w-12 text-blue-400/50 mb-3" />
+        <p className="text-sm font-medium text-center mb-1">Weather Widget</p>
+        <p className="text-xs text-muted-foreground text-center mb-3">
+          {error === 'API key required' ? 'Configure to see live weather' : error}
+        </p>
+        <p className="text-xs text-blue-500 hover:underline cursor-pointer">
+          Settings → Integrations → OpenWeatherMap
+        </p>
       </Card>
     )
   }

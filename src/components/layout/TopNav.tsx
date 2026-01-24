@@ -1,8 +1,7 @@
-import React from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, FileText, Users, Code, Zap, Settings, Search, Bell, Target, TrendingUp, Receipt, Briefcase, Calculator, FileCheck, Command, Plus } from 'lucide-react'
+import { LayoutDashboard, FileText, Users, Code, Zap, Settings, Search, Bell, Target, TrendingUp, Receipt, Briefcase, Calculator, FileCheck, Plus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useThemeStore } from '@/stores/theme-store'
 import { cn } from '@/services/utils'
 
 interface TopNavProps {
@@ -12,10 +11,9 @@ interface TopNavProps {
 
 import { ConnectModal } from './ConnectModal'
 
-export function TopNav({ activeTab, setActiveTab }: TopNavProps) {
-  const [hoveredMenu, setHoveredMenu] = React.useState<string | null>(null)
-  const [showConnect, setShowConnect] = React.useState(false)
-  const { mode } = useThemeStore()
+export function TopNav({ activeTab: _activeTab, setActiveTab }: TopNavProps) {
+  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null)
+  const [showConnect, setShowConnect] = useState(false)
 
   const menus = [
     {

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FileText, Trash2, Search, Calendar, Edit, DownloadCloud, FileDown, FileSpreadsheet, MoreVertical, CheckCircle, Clock, AlertCircle, DollarSign, ListFilter, CheckSquare2, X } from 'lucide-react'
+import { FileText, Trash2, Search, Calendar, Edit, DownloadCloud, FileDown, FileSpreadsheet, MoreVertical, CheckCircle, Clock, AlertCircle, DollarSign, ListFilter, CheckSquare2, X, Mail, TrendingUp, BarChart3, List } from 'lucide-react'
 import { Invoice } from '@/types/invoice'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +17,7 @@ import ExcelJS from 'exceljs'
 import jsPDF from 'jspdf'
 import { Loader2, User } from 'lucide-react'
 import { logger } from '@/lib/logger'
+import { InvoiceAnalytics } from '../analytics/InvoiceAnalytics'
 
 /** DB shape: dates as string | Date */
 interface SavedInvoice extends Omit<Invoice, 'issueDate' | 'dueDate' | 'paidDate' | 'createdAt' | 'updatedAt'> {
@@ -38,6 +39,7 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
   const debouncedSearch = useDebouncedValue(searchTerm, 300)
   const [statusFilter, setStatusFilter] = useState<'all' | Invoice['status']>('all')
   const [dateFilter, setDateFilter] = useState<'all' | 'this_month' | 'this_year'>('all')
+  const [viewMode, setViewMode] = useState<'list' | 'analytics'>('list')
   const { updateInvoice } = useInvoice()
   const { toast } = useToast()
 
@@ -97,8 +99,32 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
     const paid = invoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.total, 0)
     const overdue = invoices.filter(inv => inv.status === 'overdue').reduce((sum, inv) => sum + inv.total, 0)
     const pending = invoices.filter(inv => inv.status === 'sent').reduce((sum, inv) => sum + inv.total, 0)
-    return { total, paid, overdue, pending }
+    const avgDaysToPayment = invoices
+      .filter(inv => inv.status === 'paid' && inv.paidDate)
+      .reduce((acc, inv) => {
+        const days = Math.floor((new Date(inv.paidDate!).getTime() - new Date(inv.issueDate).getTime()) / (1000 * 60 * 60 * 24))
+        return acc + days
+      }, 0) / (invoices.filter(inv => inv.status === 'paid' && inv.paidDate).length || 1)
+    return { total, paid, overdue, pending, avgDaysToPayment: Math.round(avgDaysToPayment) }
   }, [invoices])
+
+  // Calculate days until/since due
+  const getDaysUntilDue = (dueDate: Date): { days: number; label: string; isOverdue: boolean } => {
+    const now = new Date()
+    const due = new Date(dueDate)
+    const diffTime = due.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays < 0) {
+      return { days: Math.abs(diffDays), label: `${Math.abs(diffDays)}d overdue`, isOverdue: true }
+    } else if (diffDays === 0) {
+      return { days: 0, label: 'Due today', isOverdue: false }
+    } else if (diffDays <= 7) {
+      return { days: diffDays, label: `${diffDays}d left`, isOverdue: false }
+    } else {
+      return { days: diffDays, label: `${diffDays}d`, isOverdue: false }
+    }
+  }
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter(inv => {
@@ -280,6 +306,25 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Manage and track all your invoices</p>
         </div>
         <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mr-2">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}
+            >
+              <List className="h-4 w-4 mr-1.5" /> List
+            </Button>
+            <Button
+              variant={viewMode === 'analytics' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('analytics')}
+              className={viewMode === 'analytics' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}
+            >
+              <BarChart3 className="h-4 w-4 mr-1.5" /> Analytics
+            </Button>
+          </div>
           {isSelectMode ? (
             <>
               <Button variant="outline" size="sm" onClick={clearSelection} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
@@ -330,7 +375,7 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -383,6 +428,19 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
             </div>
           </CardContent>
         </Card>
+        <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Avg. Days to Pay</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.avgDaysToPayment} days</p>
+              </div>
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="flex gap-3 mb-6">
@@ -419,6 +477,9 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
         </Select>
       </div>
 
+      {viewMode === 'analytics' ? (
+        <InvoiceAnalytics invoices={invoices} />
+      ) : (
       <div className="space-y-3">
         {loading && invoices.length === 0 ? (
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -429,8 +490,13 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
           </Card>
         ) : (
           <>
-        {filteredInvoices.map(invoice => (
-          <Card key={invoice.id} className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all">
+        {filteredInvoices.map(invoice => {
+          const dueInfo = invoice.status !== 'paid' ? getDaysUntilDue(invoice.dueDate) : null
+          const amountPaid = invoice.payment?.amountPaid || 0
+          const balanceDue = invoice.total - amountPaid
+
+          return (
+          <Card key={invoice.id} className={`border bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all ${dueInfo?.isOverdue ? 'border-red-300 dark:border-red-700' : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'}`}>
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex gap-4 items-center flex-1">
@@ -443,11 +509,11 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
                       aria-label={`Select invoice ${invoice.invoiceNumber}`}
                     />
                   )}
-                  <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                    <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <div className={`h-12 w-12 rounded-lg flex items-center justify-center shrink-0 ${invoice.status === 'paid' ? 'bg-green-100 dark:bg-green-900/30' : dueInfo?.isOverdue ? 'bg-red-100 dark:bg-red-900/30' : 'bg-blue-100 dark:bg-blue-900/30'}`}>
+                    <FileText className={`h-6 w-6 ${invoice.status === 'paid' ? 'text-green-600 dark:text-green-400' : dueInfo?.isOverdue ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`} />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1 flex-wrap">
                       <span className="font-semibold text-gray-900 dark:text-white text-base">{invoice.invoiceNumber}</span>
                       <Badge 
                         variant={getStatusVariant(invoice.status)} 
@@ -455,14 +521,32 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
                       >
                         {invoice.status}
                       </Badge>
+                      {dueInfo && invoice.status !== 'paid' && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${dueInfo.isOverdue ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : dueInfo.days <= 7 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                          {dueInfo.label}
+                        </span>
+                      )}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-4">
-                      <span className="flex items-center gap-1.5">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-4 flex-wrap">
+                      <span className="flex items-center gap-1.5 font-medium text-gray-800 dark:text-gray-200">
                         <User className="h-3.5 w-3.5" /> {invoice.clientId}
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5" /> {format(invoice.issueDate, 'MMM dd, yyyy')}
+                        <Calendar className="h-3.5 w-3.5" /> {format(invoice.issueDate, 'MMM dd')}
                       </span>
+                      <span className="flex items-center gap-1.5 text-gray-500">
+                        Due: {format(invoice.dueDate, 'MMM dd, yyyy')}
+                      </span>
+                      {invoice.projectId && (
+                        <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-400">
+                          {invoice.projectId}
+                        </span>
+                      )}
+                      {invoice.poNumber && (
+                        <span className="text-xs text-gray-500">
+                          PO: {invoice.poNumber}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -472,7 +556,17 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
                     <div className="font-bold text-lg text-gray-900 dark:text-white">
                       {new Intl.NumberFormat('en-US', { style: 'currency', currency: invoice.currency }).format(invoice.total)}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Total Amount</div>
+                    {amountPaid > 0 && invoice.status !== 'paid' ? (
+                      <div className="text-xs">
+                        <span className="text-green-600 dark:text-green-400">Paid: {new Intl.NumberFormat('en-US', { style: 'currency', currency: invoice.currency }).format(amountPaid)}</span>
+                        <span className="text-gray-400 mx-1">|</span>
+                        <span className="text-orange-600 dark:text-orange-400">Due: {new Intl.NumberFormat('en-US', { style: 'currency', currency: invoice.currency }).format(balanceDue)}</span>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {invoice.status === 'paid' ? 'Paid in full' : 'Total Amount'}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     {!isSelectMode && invoice.status !== 'paid' && (
@@ -497,11 +591,10 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
                           <Edit className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => {
-                          const link = document.createElement('a')
-                          link.href = `#invoice-${invoice.id}`
-                          link.click()
+                          // Send reminder email
+                          toast({ title: "Reminder", description: "Email reminder feature coming soon" })
                         }} className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                          <FileText className="mr-2 h-4 w-4" /> View Details
+                          <Mail className="mr-2 h-4 w-4" /> Send Reminder
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDelete(invoice.id)} className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
                           <Trash2 className="mr-2 h-4 w-4" /> Delete
@@ -514,7 +607,8 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
               </div>
             </CardContent>
           </Card>
-        ))}
+          )
+        })}
 
         {filteredInvoices.length === 0 && !loading && (
           <Card className="border border-gray-200 dark:border-gray-700 border-dashed bg-gray-50 dark:bg-gray-800/50">
@@ -528,6 +622,7 @@ export function InvoiceHistory({ setActiveTab }: InvoiceHistoryProps) {
           </>
         )}
       </div>
+      )}
     </div>
   )
 }

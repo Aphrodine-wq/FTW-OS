@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, Trash2 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Plus, Trash2, Building2, CreditCard } from 'lucide-react'
 import { useInvoice } from '@/hooks/useInvoice'
 import { Product, Invoice } from '@/types/invoice'
 import { format } from 'date-fns'
@@ -11,6 +12,7 @@ import { LineItemEditor } from './LineItemEditor'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Switch } from '@/components/ui/switch'
 import { validateInvoiceForm } from '@/lib/invoice-validation'
+import { useClientStore } from '@/stores/client-store'
 
 interface InvoiceFormBuilderProps {
   currentInvoice: Invoice
@@ -20,6 +22,7 @@ interface InvoiceFormBuilderProps {
 export function InvoiceFormBuilder({ currentInvoice, products }: InvoiceFormBuilderProps) {
   const { updateInvoice } = useInvoice()
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const clients = useClientStore(state => state.clients)
 
   const validateInvoice = useCallback((): boolean => {
     const { valid, errors: err } = validateInvoiceForm(currentInvoice)
@@ -37,6 +40,28 @@ export function InvoiceFormBuilder({ currentInvoice, products }: InvoiceFormBuil
       })
     }
   }
+
+  const handleClientSelect = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId)
+    if (client) {
+      updateInvoice({
+        clientId: client.name,
+        clientEmail: client.email,
+        clientAddress: client.address
+      })
+    }
+  }
+
+  const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR', 'MXN']
+  const PAYMENT_TERMS = [
+    { value: 'due_on_receipt', label: 'Due on Receipt' },
+    { value: 'net_7', label: 'Net 7 Days' },
+    { value: 'net_15', label: 'Net 15 Days' },
+    { value: 'net_30', label: 'Net 30 Days' },
+    { value: 'net_45', label: 'Net 45 Days' },
+    { value: 'net_60', label: 'Net 60 Days' },
+    { value: 'custom', label: 'Custom' }
+  ]
 
   return (
     <div className="space-y-6 p-4">
@@ -114,18 +139,91 @@ export function InvoiceFormBuilder({ currentInvoice, products }: InvoiceFormBuil
                 />
             </div>
 
-            <div className="mt-4 space-y-2">
-                <label htmlFor="invoice-client" className="text-sm font-medium text-gray-700 dark:text-gray-300">Client Name *</label>
-                <Input 
-                  id="invoice-client"
-                  value={currentInvoice.clientId}
-                  onChange={(e) => handleFormChange('clientId', e.target.value)}
-                  placeholder="Enter client name or select from list"
-                  className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
-                  aria-required="true"
-                  aria-invalid={!!errors.clientId}
-                />
-                {errors.clientId && <p className="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{errors.clientId}</p>}
+            <div className="mt-4 space-y-4">
+                {/* Client Selection */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Client *
+                  </label>
+                  {clients.length > 0 ? (
+                    <Select onValueChange={handleClientSelect}>
+                      <SelectTrigger className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600">
+                        <SelectValue placeholder="Select a client or type below" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clients.map(client => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name} {client.email && `(${client.email})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : null}
+                  <Input 
+                    id="invoice-client"
+                    value={currentInvoice.clientId}
+                    onChange={(e) => handleFormChange('clientId', e.target.value)}
+                    placeholder="Or enter client name manually"
+                    className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                    aria-required="true"
+                    aria-invalid={!!errors.clientId}
+                  />
+                  {errors.clientId && <p className="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{errors.clientId}</p>}
+                </div>
+
+                {/* Client Email */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Client Email</label>
+                  <Input 
+                    type="email"
+                    value={currentInvoice.clientEmail || ''}
+                    onChange={(e) => handleFormChange('clientEmail', e.target.value)}
+                    placeholder="client@example.com"
+                    className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
+
+                {/* Currency & Payment Terms Row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
+                    <Select value={currentInvoice.currency || 'USD'} onValueChange={(val) => handleFormChange('currency', val)}>
+                      <SelectTrigger className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map(curr => (
+                          <SelectItem key={curr} value={curr}>{curr}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Payment Terms</label>
+                    <Select value={currentInvoice.paymentTerms || 'net_30'} onValueChange={(val) => handleFormChange('paymentTerms', val)}>
+                      <SelectTrigger className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAYMENT_TERMS.map(term => (
+                          <SelectItem key={term.value} value={term.value}>{term.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Project Reference */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Project Reference</label>
+                  <Input 
+                    value={currentInvoice.projectId || ''}
+                    onChange={(e) => handleFormChange('projectId', e.target.value)}
+                    placeholder="e.g. Website Redesign, Consulting Q4"
+                    className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -222,6 +320,117 @@ export function InvoiceFormBuilder({ currentInvoice, products }: InvoiceFormBuil
                   className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
                 />
              </div>
+
+             {/* Deposit/Amount Paid */}
+             <div className="grid grid-cols-2 gap-4">
+               <div className="space-y-2">
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Deposit/Amount Paid</label>
+                 <Input 
+                   type="number"
+                   className="text-right bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                   value={(currentInvoice.payment?.amountPaid) || 0}
+                   onChange={(e) => {
+                     const amountPaid = Number(e.target.value)
+                     updateInvoice({ 
+                       payment: { 
+                         ...currentInvoice.payment, 
+                         amountPaid,
+                         status: amountPaid >= currentInvoice.total ? 'paid' : amountPaid > 0 ? 'partial' : 'unpaid'
+                       } 
+                     })
+                   }}
+                 />
+               </div>
+               <div className="space-y-2">
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Discount</label>
+                 <Input 
+                   type="number"
+                   className="text-right bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                   value={currentInvoice.discount || 0}
+                   onChange={(e) => {
+                     const discount = Number(e.target.value)
+                     const total = currentInvoice.subtotal + (currentInvoice.shipping || 0) + (currentInvoice.tax || 0) - discount
+                     updateInvoice({ discount, total })
+                   }}
+                 />
+               </div>
+             </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Section: Bank Details */}
+        <AccordionItem value="bank" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4 bg-white dark:bg-gray-800 shadow-sm">
+          <AccordionTrigger className="hover:no-underline py-4">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Bank Details
+            </h3>
+          </AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4 space-y-4">
+            <p className="text-sm text-gray-500">These details will appear on the invoice for bank transfer payments.</p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Bank Name</label>
+                <Input 
+                  value={currentInvoice.bankDetails?.bankName || ''}
+                  onChange={(e) => updateInvoice({ bankDetails: { ...currentInvoice.bankDetails, bankName: e.target.value } })}
+                  placeholder="Chase, Bank of America, etc."
+                  className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Account Name</label>
+                <Input 
+                  value={currentInvoice.bankDetails?.accountName || ''}
+                  onChange={(e) => updateInvoice({ bankDetails: { ...currentInvoice.bankDetails, accountName: e.target.value } })}
+                  placeholder="FTW LLC"
+                  className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Account Number</label>
+                <Input 
+                  value={currentInvoice.bankDetails?.accountNumber || ''}
+                  onChange={(e) => updateInvoice({ bankDetails: { ...currentInvoice.bankDetails, accountNumber: e.target.value } })}
+                  placeholder="xxxx-xxxx-xxxx"
+                  className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Routing Number</label>
+                <Input 
+                  value={currentInvoice.bankDetails?.routingNumber || ''}
+                  onChange={(e) => updateInvoice({ bankDetails: { ...currentInvoice.bankDetails, routingNumber: e.target.value } })}
+                  placeholder="xxxxxxxxx"
+                  className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">SWIFT/BIC (International)</label>
+                <Input 
+                  value={currentInvoice.bankDetails?.swift || ''}
+                  onChange={(e) => updateInvoice({ bankDetails: { ...currentInvoice.bankDetails, swift: e.target.value } })}
+                  placeholder="Optional"
+                  className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">IBAN (International)</label>
+                <Input 
+                  value={currentInvoice.bankDetails?.iban || ''}
+                  onChange={(e) => updateInvoice({ bankDetails: { ...currentInvoice.bankDetails, iban: e.target.value } })}
+                  placeholder="Optional"
+                  className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+            </div>
           </AccordionContent>
         </AccordionItem>
 

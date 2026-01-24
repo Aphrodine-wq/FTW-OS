@@ -3,8 +3,7 @@
  * Displays and manages application notifications
  */
 
-import React from 'react'
-import { Bell, X, Check } from 'lucide-react'
+import { Bell, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Popover,

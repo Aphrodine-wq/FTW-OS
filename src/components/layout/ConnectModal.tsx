@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useSettingsStore } from '@/stores/settings-store'
-import { Check, Gamepad2, Music, X, Zap } from 'lucide-react'
+import { Check, Gamepad2, Music, Zap } from 'lucide-react'
 
 interface ConnectModalProps {
   open: boolean

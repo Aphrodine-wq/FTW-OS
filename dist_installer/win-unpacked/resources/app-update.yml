@@ -1,4 +1,5 @@
-owner: your-github-username
-repo: ftw-os
+owner: Aphrodine-wq
+repo: FTW-OS
 provider: github
+releaseType: release
 updaterCacheDirName: ftwos-updater

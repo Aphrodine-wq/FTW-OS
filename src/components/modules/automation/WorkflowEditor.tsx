@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { 
-  Zap, ArrowRight, Mail, Clock, CheckCircle, 
-  Plus, Play, Settings, MoreHorizontal, MessageSquare,
-  X, Edit, Trash2, Copy, History, Filter, Search,
+  Zap, ArrowRight, 
+  Plus, Play, 
+  X, Edit, Trash2, Copy, History, Search,
   AlertCircle, TrendingUp, Activity, Layers, Sparkles
 } from 'lucide-react'
 import { cn } from '@/services/utils'

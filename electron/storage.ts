@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import twilio from 'twilio'
 import { SupabaseService } from './supabase'
+import { SQLiteService } from './sqlite'
 
 const DATA_DIR = path.join(app.getPath('userData'), 'data')
 
@@ -11,40 +12,42 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true })
 }
 
+// Legacy StorageService - now wraps SQLiteService
 export class StorageService {
   static getPath(filename: string) {
     return path.join(DATA_DIR, `${filename}.json`)
   }
 
-  static async read<T>(filename: string, defaultValue: T): Promise<T> {
+  // Read now uses SQLite
+  static async read<T>(table: string, defaultValue: T): Promise<T> {
     try {
-      const filePath = this.getPath(filename)
-      if (!fs.existsSync(filePath)) {
-        await this.write(filename, defaultValue)
-        return defaultValue
+      if (table === 'settings') {
+        const settings = await SQLiteService.getSettings()
+        return (Object.keys(settings).length > 0 ? settings : defaultValue) as T
       }
-      const data = await fs.promises.readFile(filePath, 'utf-8')
-      return JSON.parse(data)
+      
+      const data = await SQLiteService.getAll<any>(table)
+      return (data.length > 0 ? data : defaultValue) as T
     } catch (error) {
-      console.error(`Failed to read ${filename}:`, error)
+      console.error(`Failed to read ${table}:`, error)
       return defaultValue
     }
   }
 
-  static async write<T>(filename: string, data: T): Promise<boolean> {
+  // Write now uses SQLite
+  static async write<T>(table: string, data: T): Promise<boolean> {
     try {
-      const filePath = this.getPath(filename)
-      await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8')
-      
-      // Try to sync to Supabase if available
-      // Map filename to table name (assuming 1:1 for simplicity)
-      if (Array.isArray(data)) {
-        await SupabaseService.syncTable(filename, data)
+      if (table === 'settings') {
+        await SQLiteService.saveSettings(data as Record<string, any>)
+      } else if (Array.isArray(data)) {
+        await SQLiteService.upsertMany(table, data)
+        // Try to sync to Supabase if available
+        await SupabaseService.syncTable(table, data)
       }
       
       return true
     } catch (error) {
-      console.error(`Failed to write ${filename}:`, error)
+      console.error(`Failed to write ${table}:`, error)
       return false
     }
   }
@@ -271,11 +274,145 @@ export function setupStorageHandlers() {
 
   ipcMain.handle('db:get-documents-by-category', async (_, category: string) => {
     try {
-      const registry = await StorageService.read<any[]>('document_registry', [])
-      return registry.filter(r => r.category === category)
+      // Use SQLite query for better performance
+      return SQLiteService.query(
+        'SELECT * FROM document_registry WHERE category = ?',
+        [category]
+      )
     } catch (error) {
       console.error('Failed to get documents by category:', error)
       return []
+    }
+  })
+
+  // Time Entries (for time tracking)
+  ipcMain.handle('db:get-time-entries', async () => {
+    return await StorageService.read('time_entries', [])
+  })
+
+  ipcMain.handle('db:save-time-entries', async (_, entries) => {
+    return await StorageService.write('time_entries', entries)
+  })
+
+  // Projects
+  ipcMain.handle('db:get-projects', async () => {
+    return await StorageService.read('projects', [])
+  })
+
+  ipcMain.handle('db:save-projects', async (_, projects) => {
+    return await StorageService.write('projects', projects)
+  })
+
+  // Advanced Query Handlers (leverage SQLite for speed)
+  ipcMain.handle('db:query', async (_, { table, where, orderBy, limit }) => {
+    try {
+      let sql = `SELECT * FROM ${table}`
+      const params: any[] = []
+
+      if (where && Object.keys(where).length > 0) {
+        const conditions = Object.entries(where).map(([key, value]) => {
+          params.push(value)
+          return `${key} = ?`
+        })
+        sql += ` WHERE ${conditions.join(' AND ')}`
+      }
+
+      if (orderBy) {
+        sql += ` ORDER BY ${orderBy.column} ${orderBy.direction || 'ASC'}`
+      }
+
+      if (limit) {
+        sql += ` LIMIT ${limit}`
+      }
+
+      return SQLiteService.query(sql, params)
+    } catch (error) {
+      console.error('Query failed:', error)
+      return []
+    }
+  })
+
+  // Get invoices by client (optimized query)
+  ipcMain.handle('db:get-invoices-by-client', async (_, clientId: string) => {
+    return SQLiteService.query(
+      'SELECT * FROM invoices WHERE clientId = ? ORDER BY issueDate DESC',
+      [clientId]
+    )
+  })
+
+  // Get tasks by project (optimized query)
+  ipcMain.handle('db:get-tasks-by-project', async (_, projectId: string) => {
+    return SQLiteService.query(
+      'SELECT * FROM tasks WHERE projectId = ? ORDER BY createdAt DESC',
+      [projectId]
+    )
+  })
+
+  // Get expenses by date range (optimized query)
+  ipcMain.handle('db:get-expenses-by-range', async (_, { startDate, endDate }) => {
+    return SQLiteService.query(
+      'SELECT * FROM expenses WHERE date >= ? AND date <= ? ORDER BY date DESC',
+      [startDate, endDate]
+    )
+  })
+
+  // Dashboard stats (single query instead of multiple reads)
+  ipcMain.handle('db:get-dashboard-stats', async () => {
+    try {
+      const invoiceStats = SQLiteService.query<any>(
+        `SELECT 
+          COUNT(*) as totalInvoices,
+          SUM(CASE WHEN status = 'paid' THEN total ELSE 0 END) as totalRevenue,
+          SUM(CASE WHEN status = 'pending' OR status = 'sent' THEN total ELSE 0 END) as pendingRevenue,
+          SUM(CASE WHEN status = 'overdue' THEN total ELSE 0 END) as overdueRevenue
+        FROM invoices`
+      )[0] || {}
+
+      const clientCount = SQLiteService.query<any>(
+        'SELECT COUNT(*) as count FROM clients'
+      )[0]?.count || 0
+
+      const taskStats = SQLiteService.query<any>(
+        `SELECT 
+          COUNT(*) as totalTasks,
+          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completedTasks,
+          SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as inProgressTasks
+        FROM tasks`
+      )[0] || {}
+
+      const expenseTotal = SQLiteService.query<any>(
+        'SELECT SUM(amount) as total FROM expenses'
+      )[0]?.total || 0
+
+      return {
+        invoices: invoiceStats,
+        clients: clientCount,
+        tasks: taskStats,
+        expenses: expenseTotal
+      }
+    } catch (error) {
+      console.error('Failed to get dashboard stats:', error)
+      return null
+    }
+  })
+
+  // Full database export (for backups) - now uses SQLite export
+  ipcMain.handle('db:export-all', async () => {
+    try {
+      return await SQLiteService.exportAll()
+    } catch (error) {
+      console.error('Full export failed:', error)
+      throw error
+    }
+  })
+
+  // Full database import (for restores)
+  ipcMain.handle('db:import-all', async (_, data) => {
+    try {
+      return await SQLiteService.importAll(data)
+    } catch (error) {
+      console.error('Full import failed:', error)
+      throw error
     }
   })
 }

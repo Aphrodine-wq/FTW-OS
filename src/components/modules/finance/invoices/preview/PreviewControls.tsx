@@ -1,16 +1,19 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Download, Copy, Printer, Save, Mail, CheckCircle, FilePlus, Loader2, MessageSquare, FileSpreadsheet } from 'lucide-react'
+import { Download, Copy, Printer, Save, Mail, CheckCircle, FilePlus, Loader2, MessageSquare, FileSpreadsheet, Send } from 'lucide-react'
 import { useInvoice } from '@/hooks/useInvoice'
 import { useToast } from '@/components/ui/use-toast'
 import { validateInvoiceForm } from '@/lib/invoice-validation'
+import { useSettingsStore } from '@/stores/settings-store'
 // html2canvas and jsPDF are lazy-loaded only when exporting PDF
 
 export function PreviewControls() {
   const { currentInvoice, updateInvoice, generateInvoice } = useInvoice()
   const { toast } = useToast()
+  const { businessProfile, integrations } = useSettingsStore()
   const [isExporting, setIsExporting] = useState(false)
   const [isSendingSMS, setIsSendingSMS] = useState(false)
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
 
   const handleSave = async () => {
     if (!currentInvoice) return
@@ -243,12 +246,105 @@ export function PreviewControls() {
     }
   }
 
-  const handleEmail = () => {
+  const handleEmail = async () => {
     if (!currentInvoice) return
-    const subject = `Invoice #${currentInvoice.invoiceNumber} from ${currentInvoice.clientId}`
-    const body = `Dear ${currentInvoice.clientId},\n\nPlease find attached invoice #${currentInvoice.invoiceNumber} for ${new Intl.NumberFormat('en-US', { style: 'currency', currency: currentInvoice.currency }).format(currentInvoice.total)}.\n\nThank you for your business!`
     
-    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
+    // Check if email is configured
+    const settings = await window.ipcRenderer.invoke('db:get-settings')
+    const smtpConfig = settings?.smtpConfig
+    
+    if (!smtpConfig?.host || !smtpConfig?.user || !smtpConfig?.pass) {
+      // Fall back to mailto: if SMTP not configured
+      const subject = `Invoice #${currentInvoice.invoiceNumber} from ${businessProfile?.companyName || 'Your Business'}`
+      const body = `Dear Client,\n\nPlease find attached invoice #${currentInvoice.invoiceNumber} for ${new Intl.NumberFormat('en-US', { style: 'currency', currency: currentInvoice.currency }).format(currentInvoice.total)}.\n\nThank you for your business!`
+      window.open(`mailto:${currentInvoice.clientEmail || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
+      toast({
+        title: "Email Client Opened",
+        description: "Configure SMTP in Settings to send directly from the app.",
+      })
+      return
+    }
+
+    if (!currentInvoice.clientEmail) {
+      toast({
+        title: "No Email Address",
+        description: "Please add a client email address to send the invoice.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsSendingEmail(true)
+    
+    try {
+      // Generate PDF for attachment
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ])
+
+      const element = document.getElementById('invoice-preview')
+      if (!element) throw new Error('Preview element not found')
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      })
+
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight)
+      
+      const pdfBase64 = pdf.output('datauristring').split(',')[1]
+
+      // Send via backend
+      const result = await window.ipcRenderer.invoke('mail:send', {
+        config: {
+          host: smtpConfig.host,
+          port: smtpConfig.port || 587,
+          secure: smtpConfig.port === 465,
+          user: smtpConfig.user,
+          pass: smtpConfig.pass
+        },
+        mailOptions: {
+          from: smtpConfig.user,
+          to: currentInvoice.clientEmail,
+          subject: `Invoice #${currentInvoice.invoiceNumber} from ${businessProfile?.companyName || 'Your Business'}`,
+          text: `Dear ${currentInvoice.clientName || 'Client'},\n\nPlease find attached invoice #${currentInvoice.invoiceNumber} for ${new Intl.NumberFormat('en-US', { style: 'currency', currency: currentInvoice.currency }).format(currentInvoice.total)}.\n\nDue Date: ${new Date(currentInvoice.dueDate).toLocaleDateString()}\n\nThank you for your business!\n\n${businessProfile?.companyName || ''}`,
+          html: `<p>Dear ${currentInvoice.clientName || 'Client'},</p><p>Please find attached invoice <strong>#${currentInvoice.invoiceNumber}</strong> for <strong>${new Intl.NumberFormat('en-US', { style: 'currency', currency: currentInvoice.currency }).format(currentInvoice.total)}</strong>.</p><p>Due Date: ${new Date(currentInvoice.dueDate).toLocaleDateString()}</p><p>Thank you for your business!</p><p>${businessProfile?.companyName || ''}</p>`,
+          attachments: [{
+            filename: `Invoice-${currentInvoice.invoiceNumber}.pdf`,
+            content: pdfBase64,
+            encoding: 'base64'
+          }]
+        }
+      })
+
+      if (result.success) {
+        // Update invoice status to 'sent'
+        updateInvoice({ status: 'sent' })
+        
+        toast({
+          title: "Invoice Sent",
+          description: `Invoice emailed to ${currentInvoice.clientEmail}`,
+        })
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error: any) {
+      console.error('Email send error:', error)
+      toast({
+        title: "Email Failed",
+        description: error.message || "Could not send email. Check your SMTP settings.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSendingEmail(false)
+    }
   }
 
   const handleSMS = async () => {
@@ -296,8 +392,8 @@ export function PreviewControls() {
         <CheckCircle className="h-4 w-4 text-green-600" />
       </Button>
 
-      <Button variant="outline" size="sm" onClick={handleEmail} disabled={!currentInvoice} title="Send via Email">
-        <Mail className="h-4 w-4" />
+      <Button variant="outline" size="sm" onClick={handleEmail} disabled={!currentInvoice || isSendingEmail} title="Send via Email">
+        {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
       </Button>
 
       <Button variant="outline" size="sm" onClick={handleSMS} disabled={!currentInvoice || isSendingSMS} title="Send via SMS">

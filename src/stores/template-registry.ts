@@ -1,13 +1,16 @@
 export interface TemplateConfig {
   id: string
   name: string
-  category: 'Corporate' | 'Creative' | 'Industry' | 'Legal'
-  style: 'corporate' | 'creative' | 'minimalist' | 'tech' | 'classic'
+  category: 'Corporate' | 'Creative' | 'Industry' | 'Legal' | 'Custom'
+  style: 'corporate' | 'creative' | 'minimalist' | 'tech' | 'classic' | 'ftw'
   colors: { primary: string, secondary: string, background: string, text: string }
   fonts: { header: string, body: string }
 }
 
 export const TEMPLATES: TemplateConfig[] = [
+  // Custom FTW Template (Default)
+  { id: 'ftw', name: 'FTW Clean', category: 'Custom', style: 'ftw', colors: { primary: '#111827', secondary: '#f3f4f6', background: '#ffffff', text: '#1f2937' }, fonts: { header: 'Inter', body: 'Inter' } },
+
   // Corporate
   { id: 'fortune500', name: 'Fortune 500', category: 'Corporate', style: 'corporate', colors: { primary: '#0f172a', secondary: '#cbd5e1', background: '#ffffff', text: '#1e293b' }, fonts: { header: 'Inter', body: 'Inter' } },
   { id: 'consultant', name: 'Pro Consultant', category: 'Corporate', style: 'corporate', colors: { primary: '#2563eb', secondary: '#bfdbfe', background: '#f8fafc', text: '#1e293b' }, fonts: { header: 'Inter', body: 'Roboto' } },
@@ -29,4 +32,28 @@ export const TEMPLATES: TemplateConfig[] = [
   // Documents
   { id: 'nda', name: 'Standard NDA', category: 'Legal', style: 'classic', colors: { primary: '#000000', secondary: '#e5e5e5', background: '#ffffff', text: '#000000' }, fonts: { header: 'Times New Roman', body: 'Times New Roman' } },
   { id: 'contract', name: 'Service Agreement', category: 'Legal', style: 'corporate', colors: { primary: '#334155', secondary: '#f1f5f9', background: '#ffffff', text: '#0f172a' }, fonts: { header: 'Inter', body: 'Inter' } },
+]
+
+// Lightweight starter templates exposed for onboarding flow
+export interface StarterTemplate {
+  id: string
+  name: string
+  description?: string
+  // optional, allows a quick glimpse of what widgets/dashboards come with
+  defaultWidgets?: string[]
+}
+
+export const STARTER_TEMPLATES: StarterTemplate[] = [
+  {
+    id: 'crm-starter-mini',
+    name: 'Starter CRM Mini',
+    description: 'A lightweight CRM setup with leads, contacts, and deals dashboards',
+    defaultWidgets: ['Leads', 'Opportunities', 'Dashboard']
+  },
+  {
+    id: 'devops-starter-mini',
+    name: 'Starter DevOps Mini',
+    description: 'DevOps focused dashboards for CI/CD, deployments, and monitoring',
+    defaultWidgets: ['CI', 'Deployments', 'Monitoring']
+  }
 ]

@@ -1,4 +1,3 @@
-import React from 'react'
 import { LayoutDashboard, Settings } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 

@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { supabase } from '@/services/supabase'
-import { injectSeedData } from '@/lib/seed-data'
 import { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { googleOAuth, GoogleUser, GoogleTokens } from '@/services/google-oauth'
 import { logger } from '@/lib/logger'
@@ -88,11 +87,6 @@ export const useAuthStore = create<AuthState>()(
 
           logger.info('User logged in successfully via Google', { userId: googleUser.id })
 
-          // Inject seed data for usable state
-          injectSeedData().catch((err) => {
-            logger.warn('Seed data injection failed', err)
-          })
-
           return {}
         } catch (error) {
           logger.error('Unexpected error during Google callback handling', error)
@@ -100,20 +94,9 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       loginAsGuest: () => {
-        set({
-            isAuthenticated: true,
-            user: {
-                id: 'guest-dev',
-                name: 'Developer (Guest)',
-                email: 'dev@ftwos.local',
-                avatar: undefined,
-                role: 'admin'
-            }
-        })
-        // Inject seed data for usable state
-        injectSeedData().catch(() => {
-          // Seed data injection failed - non-critical
-        })
+        // Guest mode disabled for production - require proper authentication
+        logger.warn('Guest login attempted but is disabled in production')
+        // Do not set authenticated state
       },
       logout: async () => {
         await supabase.auth.signOut()

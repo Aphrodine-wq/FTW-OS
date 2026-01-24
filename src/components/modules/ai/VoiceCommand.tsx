@@ -1,8 +1,7 @@
-import React, { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { 
-  Mic, MicOff, Command, Loader2
+  Mic, MicOff, Command
 } from 'lucide-react'
 import { cn } from '@/services/utils'
 

@@ -122,5 +122,6 @@ export const useInvoice = () => {
     parseText,
     generateInvoice,
     setCurrentInvoice,
+    updateInvoice,
   }
 }

@@ -3,7 +3,7 @@
  * Displays all available keyboard shortcuts
  */
 
-import React, { useEffect } from 'react'
+import { Fragment } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
@@ -21,7 +21,6 @@ import {
   Undo,
   Redo
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface Shortcut {
   id: string
@@ -138,17 +137,6 @@ interface KeyboardShortcutsHelpProps {
 
 export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsHelpProps) {
   const categories = Array.from(new Set(SHORTCUTS.map(s => s.category)))
-  
-  const formatKey = (key: string) => {
-    const keyMap: Record<string, string> = {
-      '⌘': 'Cmd',
-      '⇧': 'Shift',
-      '⌥': 'Option',
-      '⌃': 'Ctrl',
-      'Space': 'Space',
-    }
-    return keyMap[key] || key
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -192,7 +180,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
                           </div>
                           <div className="flex items-center gap-1">
                             {shortcut.keys.map((key, idx) => (
-                              <React.Fragment key={idx}>
+                              <Fragment key={idx}>
                                 <Badge
                                   variant="outline"
                                   className="font-mono text-xs px-2 py-1 min-w-[32px] text-center"
@@ -202,7 +190,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
                                 {idx < shortcut.keys.length - 1 && (
                                   <span className="text-muted-foreground text-xs mx-1">+</span>
                                 )}
-                              </React.Fragment>
+                              </Fragment>
                             ))}
                           </div>
                         </div>

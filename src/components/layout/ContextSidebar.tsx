@@ -3,11 +3,11 @@
  * Shows relevant information based on current view
  */
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { X, Plus, Calendar } from 'lucide-react'
+import { X } from 'lucide-react'
 import { getTasksContext, getFinanceContext, getProjectsContext } from '@/services/context-loader'
 import { useTaskStore } from '@/stores/task-store'
 import { useInvoiceStore } from '@/stores/invoice-store'
