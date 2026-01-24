@@ -232,4 +232,50 @@ export function setupStorageHandlers() {
   ipcMain.handle('settings:get-currency-rates', async () => {
     return { 'USD': 1, 'EUR': 0.92, 'GBP': 0.79, 'CAD': 1.36 }
   })
+
+  // Document Registry - Track AI-sorted documents
+  ipcMain.handle('db:get-document-registry', async () => {
+    return await StorageService.read('document_registry', [])
+  })
+
+  ipcMain.handle('db:save-document-registry', async (_, registry) => {
+    return await StorageService.write('document_registry', registry)
+  })
+
+  ipcMain.handle('db:add-document-record', async (_, record: {
+    id: string
+    originalPath: string
+    currentPath: string
+    category: string
+    confidence: number
+    sortedAt: string
+  }) => {
+    try {
+      const registry = await StorageService.read<any[]>('document_registry', [])
+      
+      // Check if document already exists (by original path)
+      const existingIndex = registry.findIndex(r => r.originalPath === record.originalPath)
+      if (existingIndex >= 0) {
+        registry[existingIndex] = record
+      } else {
+        registry.push(record)
+      }
+      
+      await StorageService.write('document_registry', registry)
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to add document record:', error)
+      return { success: false, error: error instanceof Error ? error.message : String(error) }
+    }
+  })
+
+  ipcMain.handle('db:get-documents-by-category', async (_, category: string) => {
+    try {
+      const registry = await StorageService.read<any[]>('document_registry', [])
+      return registry.filter(r => r.category === category)
+    } catch (error) {
+      console.error('Failed to get documents by category:', error)
+      return []
+    }
+  })
 }

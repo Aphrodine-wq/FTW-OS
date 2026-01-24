@@ -213,52 +213,6 @@ class ActivityTrackingService {
       }
     }
   }
-
-  // Get hourly productivity pattern
-  async getHourlyPattern(): Promise<Map<number, number>> {
-    const activities = await this.getRecentActivity(500)
-    const hourlyScores = new Map<number, number[]>()
-
-    activities.forEach(activity => {
-      if (activity.focus_score !== null && activity.focus_score !== undefined) {
-        const hour = new Date(activity.created_at!).getHours()
-        const scores = hourlyScores.get(hour) || []
-        scores.push(activity.focus_score)
-        hourlyScores.set(hour, scores)
-      }
-    })
-
-    const pattern = new Map<number, number>()
-    hourlyScores.forEach((scores, hour) => {
-      const avg = scores.reduce((sum, s) => sum + s, 0) / scores.length
-      pattern.set(hour, Math.round(avg))
-    })
-
-    return pattern
-  }
-
-  // Predict best time for a task type
-  async predictBestTime(_taskType: string): Promise<{ hour: number; confidence: number }> {
-    const pattern = await this.getHourlyPattern()
-    
-    if (pattern.size === 0) {
-      return { hour: 10, confidence: 0 } // Default to 10 AM
-    }
-
-    let bestHour = 10
-    let bestScore = 0
-
-    pattern.forEach((score, hour) => {
-      if (score > bestScore) {
-        bestScore = score
-        bestHour = hour
-      }
-    })
-
-    const confidence = Math.min(100, (pattern.size / 24) * 100)
-
-    return { hour: bestHour, confidence: Math.round(confidence) }
-  }
 }
 
 export const activityTrackingService = new ActivityTrackingService()

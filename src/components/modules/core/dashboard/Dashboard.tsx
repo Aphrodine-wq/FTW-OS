@@ -1,9 +1,8 @@
 import React, { useMemo, Suspense, useState, useEffect, useRef, useCallback } from 'react'
 import { Responsive, Layout } from 'react-grid-layout'
-import { Plus, LayoutGrid, Trash2, FileText, Receipt, Loader2, MoreHorizontal } from 'lucide-react'
+import { Plus, LayoutGrid, Trash2, Loader2, MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { WidgetConfig as WidgetConfigType } from '@/stores/widget-store'
 import type { ThemeState } from '@/stores/theme-store'
-import type { WidgetRegistryState } from '@/stores/widget-registry'
 import type { ResponsiveLayouts, LayoutChangeHandler } from '@/types/dashboard'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'

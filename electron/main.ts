@@ -10,7 +10,6 @@ import { setupMailHandlers } from './mail'
 import { setupBackupHandlers } from './backup'
 import { setupTerminalHandlers } from './terminal'
 import { setupGithubHandlers } from './github' // Import the new handler
-import { setupFileHandlers } from './files'
 import { TrackerService } from './tracker'
 
 // The built directory structure
@@ -33,7 +32,6 @@ setupFileSystemHandlers()
 setupVaultHandlers()
 setupMailHandlers()
 setupGithubHandlers() // Initialize GitHub handlers
-setupFileHandlers() // Real File System Access
 setupBackupHandlers()
 
 // Global Error Handling

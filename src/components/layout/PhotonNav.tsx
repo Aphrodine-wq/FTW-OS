@@ -7,9 +7,7 @@ import {
   Receipt,
   Users,
   CheckSquare,
-  FileText,
   Settings,
-  Brain,
   Zap,
   PieChart,
   Search,
@@ -24,23 +22,11 @@ import {
   Mail,
   Calendar,
   Folder,
-  Share2,
   Megaphone,
-  PenTool,
-  Scale,
   Shield,
-  Key,
-  Laptop,
   Globe,
   Server,
-  Activity,
   Box,
-  BookOpen,
-  GraduationCap,
-  Code2,
-  Mic,
-  Bot,
-  RefreshCw,
   Eye,
   EyeOff,
   Clock,
@@ -60,7 +46,7 @@ export const PhotonNav = React.memo(function PhotonNav({ activeTab, setActiveTab
   const [activeSection, setActiveSection] = useState<string | null>('core')
   const [isFocusMode, setIsFocusMode] = useState(false)
   const { mode, layoutMode, setTheme } = useThemeStore()
-  const { syncStatus, lastSyncTime } = useSyncStore()
+  useSyncStore() // Keep store active for sync status
 
   // Handle Focus Mode: Only show when hovering near top if enabled
   useEffect(() => {

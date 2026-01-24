@@ -1,7 +1,11 @@
 /**
  * Module Preloader
  * Implements intelligent preloading and prefetching for application modules
+ * with network-aware adaptive strategies
  */
+
+// Network connection quality types
+type ConnectionQuality = 'fast' | 'moderate' | 'slow' | 'offline'
 
 // Module categories for chunk grouping
 export const MODULE_CATEGORIES = {
@@ -70,6 +74,57 @@ const preloadPromises = new Map<string, Promise<React.ComponentType<{ setActiveT
 const prefetchPromises = new Map<string, Promise<React.ComponentType<{ setActiveTab: (tab: string) => void }>>>()
 // Track pending callbacks for cleanup
 const pendingCallbacks = new Map<string, number>()
+// Track module load times for adaptive prioritization
+const moduleLoadTimes = new Map<string, number>()
+
+/**
+ * Detect network connection quality
+ */
+function getConnectionQuality(): ConnectionQuality {
+  if (typeof navigator === 'undefined') return 'moderate'
+  
+  // Check if offline
+  if (!navigator.onLine) return 'offline'
+  
+  // Use Network Information API if available
+  const connection = (navigator as Navigator & { connection?: { effectiveType?: string; saveData?: boolean } }).connection
+  if (connection) {
+    if (connection.saveData) return 'slow'
+    switch (connection.effectiveType) {
+      case '4g': return 'fast'
+      case '3g': return 'moderate'
+      case '2g':
+      case 'slow-2g': return 'slow'
+      default: return 'moderate'
+    }
+  }
+  
+  return 'moderate'
+}
+
+/**
+ * Get preload batch size based on network quality
+ */
+function getPreloadBatchSize(): number {
+  switch (getConnectionQuality()) {
+    case 'fast': return 5
+    case 'moderate': return 3
+    case 'slow': return 1
+    case 'offline': return 0
+  }
+}
+
+/**
+ * Get preload delay based on network quality (in ms)
+ */
+function getPreloadDelay(): number {
+  switch (getConnectionQuality()) {
+    case 'fast': return 1000
+    case 'moderate': return 2000
+    case 'slow': return 5000
+    case 'offline': return 0
+  }
+}
 
 /**
  * Get module category
@@ -103,8 +158,14 @@ export async function preloadModule(moduleId: string): Promise<void> {
     return
   }
 
+  const startTime = performance.now()
   const promise = importFn().then(() => {
     preloadedModules.add(moduleId)
+    preloadPromises.delete(moduleId)
+    // Track load time for adaptive optimization
+    moduleLoadTimes.set(moduleId, performance.now() - startTime)
+  }).catch((err) => {
+    console.warn(`Failed to preload module ${moduleId}:`, err)
     preloadPromises.delete(moduleId)
   })
 
@@ -198,10 +259,17 @@ export function preloadModuleCategory(category: string): void {
 
 /**
  * Preload high-priority modules with smart scheduling
- * - Immediate: priority >= 9 (dashboard-critical)
- * - Deferred: priority 7-8 (load during idle time)
+ * Network-aware: adjusts batch size and timing based on connection quality
  */
 export function preloadHighPriorityModules(): void {
+  const quality = getConnectionQuality()
+  
+  // Skip preloading if offline
+  if (quality === 'offline') return
+  
+  const batchSize = getPreloadBatchSize()
+  const delay = getPreloadDelay()
+  
   // IMMEDIATE preload (priority >= 9) - only what user sees on dashboard
   const immediatePriorityModules = Object.entries(MODULE_PRIORITIES)
     .filter(([_, priority]) => priority >= 9)
@@ -210,20 +278,34 @@ export function preloadHighPriorityModules(): void {
 
   immediatePriorityModules.forEach(moduleId => preloadModule(moduleId))
 
-  // DEFER secondary modules (priority 7-8) to idle time
+  // DEFER secondary modules (priority 7-8) to idle time with batching
   const deferredPriorityModules = Object.entries(MODULE_PRIORITIES)
     .filter(([_, priority]) => priority >= 7 && priority < 9)
     .map(([moduleId]) => moduleId)
+    .sort((a, b) => MODULE_PRIORITIES[b] - MODULE_PRIORITIES[a])
 
-  // Use requestIdleCallback for deferred modules
+  // Batch prefetching based on network quality
+  const prefetchBatch = (modules: string[], index: number) => {
+    const batch = modules.slice(index, index + batchSize)
+    if (batch.length === 0) return
+    
+    batch.forEach(moduleId => prefetchModule(moduleId))
+    
+    // Schedule next batch
+    if (index + batchSize < modules.length) {
+      setTimeout(() => prefetchBatch(modules, index + batchSize), delay)
+    }
+  }
+
+  // Use requestIdleCallback for deferred modules with network-aware batching
   if ('requestIdleCallback' in window) {
     (window as Window & { requestIdleCallback: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number }).requestIdleCallback(() => {
-      deferredPriorityModules.forEach(moduleId => prefetchModule(moduleId))
+      prefetchBatch(deferredPriorityModules, 0)
     }, { timeout: 5000 })
   } else {
     setTimeout(() => {
-      deferredPriorityModules.forEach(moduleId => prefetchModule(moduleId))
-    }, 3000)
+      prefetchBatch(deferredPriorityModules, 0)
+    }, delay)
   }
 }
 
@@ -304,3 +386,36 @@ export function initializePreloading(): void {
   }
 }
 
+/**
+ * Get preload statistics for performance monitoring
+ */
+export function getPreloadStats(): {
+  loaded: string[]
+  pending: string[]
+  avgLoadTime: number
+  connectionQuality: ConnectionQuality
+} {
+  const loadTimes = Array.from(moduleLoadTimes.values())
+  return {
+    loaded: Array.from(preloadedModules),
+    pending: Array.from(preloadPromises.keys()),
+    avgLoadTime: loadTimes.length > 0 ? loadTimes.reduce((a, b) => a + b, 0) / loadTimes.length : 0,
+    connectionQuality: getConnectionQuality()
+  }
+}
+
+/**
+ * Preload modules related to the current module (adjacency-based prefetching)
+ */
+export function preloadAdjacentModules(currentModuleId: string): void {
+  const category = getModuleCategory(currentModuleId)
+  const categoryModules = MODULE_CATEGORIES[category as keyof typeof MODULE_CATEGORIES]
+  
+  if (categoryModules) {
+    // Prefetch other modules in the same category
+    categoryModules
+      .filter(m => m !== currentModuleId && !preloadedModules.has(m))
+      .slice(0, 2) // Limit to 2 adjacent modules
+      .forEach(moduleId => prefetchModule(moduleId))
+  }
+}

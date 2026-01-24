@@ -4,13 +4,18 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      // Enable fast refresh with better error overlay
+      fastRefresh: true,
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
     // Ensure qs is resolved correctly
-    dedupe: ['qs'],
+    dedupe: ['qs', 'react', 'react-dom', 'zustand'],
   },
   optimizeDeps: {
     include: [
@@ -19,10 +24,19 @@ export default defineConfig({
       'react',
       'react-dom',
       'react/jsx-runtime',
-      'qs' // Ensure qs library is pre-bundled (used by react-query and other libs)
+      'qs', // Ensure qs library is pre-bundled (used by react-query and other libs)
+      'zustand',
+      'clsx',
+      'tailwind-merge',
+      'lucide-react',
+      'framer-motion',
     ],
     // Don't pre-bundle Monaco Editor - it needs to load dynamically
     exclude: ['monaco-editor', '@monaco-editor/react'],
+    // Force consistent module IDs for better caching
+    esbuildOptions: {
+      target: 'esnext',
+    },
   },
   base: './', // Important for Electron to load assets
   build: {
@@ -31,6 +45,10 @@ export default defineConfig({
     minify: 'esbuild', // Faster minification
     target: 'esnext',
     chunkSizeWarningLimit: 500, // Lower limit for better splitting
+    modulePreload: {
+      // Enable module preloading for faster navigation
+      polyfill: true,
+    },
     // Ensure Monaco Editor is handled properly - don't break its internal structure
     commonjsOptions: {
       // Monaco Editor uses CommonJS internally - ensure proper handling
@@ -42,18 +60,34 @@ export default defineConfig({
       // Monaco will be loaded from CDN instead
       external: ['monaco-editor'],
       output: {
-        // Simplified automatic chunk splitting
-        // Vite will automatically split based on imports and dependencies
-        // Only specify essential manual chunks for critical dependencies
+        // Optimized chunk splitting strategy for enterprise apps
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Heavy libraries that should be separate
+            // Critical path: React ecosystem - must load first
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return 'vendor-react'
+            }
+            // State management - load early
+            if (id.includes('zustand') || id.includes('@tanstack/react-query')) {
+              return 'vendor-state'
+            }
+            // UI framework essentials - load early
+            if (id.includes('@radix-ui') || id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
+              return 'vendor-ui'
+            }
+            // Animation library - used throughout
+            if (id.includes('framer-motion')) {
+              return 'vendor-animation'
+            }
+            // Icons - used throughout
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons'
+            }
+            // Backend/Auth - can load slightly deferred
             if (id.includes('@supabase/supabase-js')) {
               return 'vendor-supabase'
             }
-            if (id.includes('zustand')) {
-              return 'vendor-zustand'
-            }
+            // Heavy document generation libraries - lazy load
             if (id.includes('jspdf') || id.includes('html2canvas')) {
               return 'vendor-pdf'
             }
@@ -63,28 +97,63 @@ export default defineConfig({
             if (id.includes('exceljs')) {
               return 'vendor-excel'
             }
+            // Terminal emulation - lazy load
             if (id.includes('xterm')) {
               return 'vendor-terminal'
+            }
+            // Charts - lazy load
+            if (id.includes('recharts')) {
+              return 'vendor-charts'
+            }
+            // Calendar - lazy load
+            if (id.includes('react-big-calendar') || id.includes('moment')) {
+              return 'vendor-calendar'
+            }
+            // Grid layout - lazy load
+            if (id.includes('react-grid-layout') || id.includes('react-resizable')) {
+              return 'vendor-grid'
             }
             // Monaco Editor is externalized, but just in case
             if (id.includes('monaco-editor')) {
               return 'vendor-monaco'
             }
-
-            // Critical: Bundle React and all other vendor code together
-            // This prevents "React is undefined" errors from libraries in "vendor-other"
-            // trying to access React before it's fully loaded
-            return 'vendor-core'
+            // Remaining vendor code
+            return 'vendor-misc'
           }
 
-          // Application code - let Vite handle automatic splitting
+          // Application code splitting by feature domain
+          if (id.includes('/src/components/modules/finance/')) {
+            return 'app-finance'
+          }
+          if (id.includes('/src/components/modules/productivity/')) {
+            return 'app-productivity'
+          }
+          if (id.includes('/src/components/modules/crm/')) {
+            return 'app-crm'
+          }
+          if (id.includes('/src/components/modules/automation/')) {
+            return 'app-automation'
+          }
+          if (id.includes('/src/components/modules/infra/')) {
+            return 'app-infra'
+          }
+          if (id.includes('/src/components/modules/marketing/')) {
+            return 'app-marketing'
+          }
           if (id.includes('/src/lib/lazy-modules')) {
             return 'lib-lazy-modules'
           }
         },
-        // Better file naming with hashes for caching
+        // Better file naming with hashes for long-term caching
         entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: (chunkInfo) => {
+          // Prioritize chunks for preloading hints
+          const priorityChunks = ['vendor-react', 'vendor-state', 'vendor-ui']
+          if (priorityChunks.some(p => chunkInfo.name?.includes(p))) {
+            return 'assets/priority/[name]-[hash].js'
+          }
+          return 'assets/[name]-[hash].js'
+        },
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },

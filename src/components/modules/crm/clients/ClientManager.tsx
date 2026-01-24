@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import { EmptyClientState } from '@/components/empty-states'
+import { logger } from '@/lib/logger'
 
 export function ClientManager() {
   const [clients, setClients] = useState<Client[]>([])

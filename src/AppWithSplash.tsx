@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { LandingGate } from '@/components/ui/LandingGate'
 import { Loader2 } from 'lucide-react'

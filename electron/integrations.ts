@@ -200,7 +200,4 @@ export function setupIntegrationHandlers() {
       return null
     }
   })
-
-  // Twilio SMS Handler - Moved to storage.ts for better config management
-  // ipcMain.handle('send-sms', async (_, { to, body }) => { ... })
 }

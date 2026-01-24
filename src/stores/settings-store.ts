@@ -2,6 +2,38 @@ import { create } from 'zustand'
 import { BusinessProfile } from '@/types/invoice'
 import { logger } from '@/lib/logger'
 
+// Retry configuration for resilient operations
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelay: 500,
+  maxDelay: 5000
+}
+
+// Exponential backoff helper
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  operationName: string
+): Promise<T | null> {
+  let lastError: Error | null = null
+  
+  for (let attempt = 0; attempt < RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+      const delay = Math.min(
+        RETRY_CONFIG.baseDelay * Math.pow(2, attempt),
+        RETRY_CONFIG.maxDelay
+      )
+      logger.warn(`${operationName} failed (attempt ${attempt + 1}/${RETRY_CONFIG.maxRetries}), retrying in ${delay}ms`, error)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+  
+  logger.error(`${operationName} failed after ${RETRY_CONFIG.maxRetries} attempts`, lastError)
+  return null
+}
+
 interface SettingsStore {
   businessProfile: BusinessProfile | null
   preferences: {
@@ -97,27 +129,22 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   loadSettings: async () => {
     try {
-      // Load from Electron Store (File System)
-      const saved = await window.ipcRenderer.invoke('db:get-settings')
+      // Load from Electron Store (File System) with retry
+      const saved = await withRetry(
+        () => window.ipcRenderer.invoke('db:get-settings'),
+        'Load settings from backend'
+      )
+      
       if (saved) {
         set({
           businessProfile: saved.businessProfile || null,
           preferences: { ...get().preferences, ...saved.preferences },
           integrations: { ...get().integrations, ...saved.integrations }
         })
-      } else {
-        // Fallback to localStorage if migration needed
-        const local = localStorage.getItem('invoiceforge-settings')
-        if (local) {
-          const parsed = JSON.parse(local)
-          set(parsed)
-          // Migrate to DB
-          window.ipcRenderer.invoke('db:save-settings', parsed)
-        }
+        return
       }
-    } catch (error) {
-      logger.error('Failed to load settings from backend, falling back to local storage', error)
-      // Fallback to localStorage on backend failure
+      
+      // Fallback to localStorage if backend unavailable or no data
       const local = localStorage.getItem('invoiceforge-settings')
       if (local) {
         try {
@@ -127,10 +154,17 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
             preferences: { ...get().preferences, ...parsed.preferences },
             integrations: { ...get().integrations, ...parsed.integrations }
           })
+          // Try to migrate to backend
+          withRetry(
+            () => window.ipcRenderer.invoke('db:save-settings', parsed),
+            'Migrate settings to backend'
+          ).catch(() => {}) // Non-critical, ignore
         } catch (e) {
           logger.error('Failed to parse local settings', e)
         }
       }
+    } catch (error) {
+      logger.error('Failed to load settings', error)
     }
   },
 
@@ -141,13 +175,20 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       preferences: state.preferences,
       integrations: state.integrations,
     }
-    // Save to Electron Store
+    
+    // Save to localStorage first (immediate, always works)
     try {
-      await window.ipcRenderer.invoke('db:save-settings', data)
-    } catch (error) {
-      logger.error('Failed to save to Electron store', error)
+      localStorage.setItem('invoiceforge-settings', JSON.stringify(data))
+    } catch (e) {
+      logger.warn('Failed to save to localStorage', e)
     }
-    // Backup to localStorage
-    localStorage.setItem('invoiceforge-settings', JSON.stringify(data))
+    
+    // Then save to Electron Store with retry (async, more reliable long-term)
+    withRetry(
+      () => window.ipcRenderer.invoke('db:save-settings', data),
+      'Save settings to backend'
+    ).catch(() => {
+      // Already logged in withRetry
+    })
   },
 }))

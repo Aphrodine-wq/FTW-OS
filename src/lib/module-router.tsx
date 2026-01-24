@@ -3,11 +3,11 @@
  * Handles routing and rendering of application modules with preloading
  */
 
-import React, { Suspense, useEffect } from 'react'
+import React, { Suspense, useEffect, useRef } from 'react'
 import { Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getModuleName } from './module-config'
-import { preloadModule, prefetchModule, getModuleImport } from './module-preloader'
+import { preloadModule, prefetchModule, getModuleImport, preloadAdjacentModules } from './module-preloader'
 // Use dynamic imports instead of static import to avoid warnings
 // LazyModules will be loaded dynamically via module-preloader
 
@@ -32,10 +32,25 @@ interface ModuleRouterProps {
  */
 export const ModuleRouter: React.FC<ModuleRouterProps> = ({ activeTab, setActiveTab }) => {
   const moduleName = getModuleName(activeTab)
+  const prevTabRef = useRef(activeTab)
 
   // Preload the active module immediately
   useEffect(() => {
     preloadModule(activeTab)
+    
+    // Prefetch adjacent modules after a short delay (anticipate navigation)
+    const timer = setTimeout(() => {
+      preloadAdjacentModules(activeTab)
+    }, 500)
+    
+    return () => clearTimeout(timer)
+  }, [activeTab])
+
+  // Track navigation patterns for smarter prefetching
+  useEffect(() => {
+    if (prevTabRef.current !== activeTab) {
+      prevTabRef.current = activeTab
+    }
   }, [activeTab])
 
   // Dynamically load module components to avoid static import of lazy-modules

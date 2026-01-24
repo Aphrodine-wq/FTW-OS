@@ -1,4 +1,4 @@
-import React, { useState, Suspense, useEffect, useCallback, lazy } from 'react'
+import React, { useState, Suspense, useEffect, lazy } from 'react'
 import { Loader2 } from 'lucide-react'
 import '@/styles/themes.css'
 
@@ -14,15 +14,14 @@ import { useKeyboardShortcuts, COMMON_SHORTCUTS } from '@/hooks/useKeyboardShort
 import { useFocusMode } from '@/hooks/useFocusMode'
 // Lazy load layout components to avoid static import of lazy-modules
 const PhotonNav = React.lazy(() => import('@/components/layout/PhotonNav').then(m => ({ default: m.PhotonNav })))
-const LoginScreen = React.lazy(() => import('@/components/modules/auth/LoginScreen').then(m => ({ default: m.LoginScreen })))
 const CommandPalette = React.lazy(() => import('@/components/layout/CommandPalette').then(m => ({ default: m.CommandPalette })))
 const TitleBar = React.lazy(() => import('@/components/ui/title-bar').then(m => ({ default: m.TitleBar })))
+// Lazy load secondary layout components for better initial load performance
+const NotificationCenter = React.lazy(() => import('@/components/layout/NotificationCenter').then(m => ({ default: m.NotificationCenter })))
+const QuickCapture = React.lazy(() => import('@/components/workflow/QuickCapture').then(m => ({ default: m.QuickCapture })))
+const ContextSidebar = React.lazy(() => import('@/components/layout/ContextSidebar').then(m => ({ default: m.ContextSidebar })))
+const KeyboardShortcutsHelp = React.lazy(() => import('@/components/layout/KeyboardShortcutsHelp').then(m => ({ default: m.KeyboardShortcutsHelp })))
 import { initializePreloading } from '@/lib/module-preloader'
-import { performanceService } from '@/services/performance-service'
-import { NotificationCenter } from '@/components/layout/NotificationCenter'
-import { QuickCapture } from '@/components/workflow/QuickCapture'
-import { ContextSidebar } from '@/components/layout/ContextSidebar'
-import { KeyboardShortcutsHelp } from '@/components/layout/KeyboardShortcutsHelp'
 // Lazy load workflow engine
 type WorkflowEngine = {
   initialize: () => void
@@ -47,7 +46,6 @@ const AppInner = ({ storeState }: { storeState: NonNullable<ReturnType<typeof us
   const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false)
 
   const { focusMode, toggleFocus } = useFocusMode()
-  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Initialize workflow engine (lazy loaded)
   useEffect(() => {
@@ -68,7 +66,6 @@ const AppInner = ({ storeState }: { storeState: NonNullable<ReturnType<typeof us
   const {
     loadSettings,
     mode,
-    isAuthenticated,
     initializeListener,
     loadAllKeys
   } = storeState
@@ -90,15 +87,20 @@ const AppInner = ({ storeState }: { storeState: NonNullable<ReturnType<typeof us
     loadAllKeys()
     // Initialize module preloading after stores are ready
     initializePreloading()
-    // Initialize performance monitoring
-    performanceService.initialize()
+    // Defer performance monitoring initialization to idle time
+    const initPerformance = () => {
+      import('@/services/performance-service').then(({ performanceService }) => {
+        performanceService.initialize()
+      })
+    }
+    if ('requestIdleCallback' in window) {
+      (window as Window & { requestIdleCallback: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number }).requestIdleCallback(initPerformance, { timeout: 5000 })
+    } else {
+      setTimeout(initPerformance, 3000)
+    }
   }, [loadSettings, loadAllKeys])
 
-  // Navigation event listener
-  const handleNavigation = useCallback((e: CustomEvent) => {
-    if (e.detail) setActiveTab(e.detail)
-  }, [])
-
+  // Navigation handled via event listener below
   useEffect(() => {
     const eventName = 'navigate-to-tab' as keyof WindowEventMap
     const handler = (e: Event) => {
@@ -175,14 +177,16 @@ const AppInner = ({ storeState }: { storeState: NonNullable<ReturnType<typeof us
         </main>
 
         {!focusMode && contextSidebarOpen && (
-          <ContextSidebar
-            activeTab={activeTab}
-            onNewTask={() => setQuickCaptureOpen(true)}
-            onNewInvoice={() => { }}
-            onNewExpense={() => setQuickCaptureOpen(true)}
-            onViewCalendar={() => setActiveTab('calendar')}
-            onClose={() => setContextSidebarOpen(false)}
-          />
+          <Suspense fallback={null}>
+            <ContextSidebar
+              activeTab={activeTab}
+              onNewTask={() => setQuickCaptureOpen(true)}
+              onNewInvoice={() => { }}
+              onNewExpense={() => setQuickCaptureOpen(true)}
+              onViewCalendar={() => setActiveTab('calendar')}
+              onClose={() => setContextSidebarOpen(false)}
+            />
+          </Suspense>
         )}
       </div>
 
