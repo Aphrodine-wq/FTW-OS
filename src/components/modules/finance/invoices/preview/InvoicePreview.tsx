@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,11 +9,12 @@ import { useInvoice } from '@/hooks/useInvoice'
 import { useTemplateStore } from '@/stores/template-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { TEMPLATES } from '@/stores/template-registry'
-import { MessageSquare, Send, X, Loader2, Printer } from 'lucide-react'
+import { MessageSquare, Send, X, Loader2, Printer, Mail } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TemplateMinimal } from './templates/TemplateMinimal'
 import { TemplateCreative } from './templates/TemplateCreative'
 import { TemplateStandard } from './templates/TemplateStandard'
+import { TemplateFTW } from './templates/TemplateFTW'
 
 export function InvoicePreview() {
   const { currentInvoice } = useInvoice()
@@ -95,6 +96,8 @@ export function InvoicePreview() {
     const props = { invoice: currentInvoice, business: businessProfile, paymentLink }
     
     switch (config.style) {
+      case 'ftw':
+        return <TemplateFTW {...props} />
       case 'minimalist':
         return <TemplateMinimal {...props} />
       case 'creative':

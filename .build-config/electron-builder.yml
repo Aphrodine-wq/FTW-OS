@@ -15,6 +15,16 @@ asar: true
 asarUnpack:
   - "**/node_modules/sql.js/**/*"
   - "**/node_modules/@supabase/**/*"
+  - "**/*.dll"
+  - "**/*.node"
+
+# Ensure all Electron native files are included
+extraFiles:
+  - from: "node_modules/electron/dist"
+    to: "."
+    filter:
+      - "ffmpeg.dll"
+      - "*.dll"
 
 compression: maximum
 
@@ -24,9 +34,9 @@ win:
       arch:
         - x64
   icon: resources/icons/icon.png
-  # certificateFile: null
   verifyUpdateCodeSignature: false
   forceCodeSigning: false
+  signAndEditExecutable: false
 
 nsis:
   oneClick: false
@@ -35,11 +45,13 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: FTWOS
-  artifactName: "${productName} Setup ${version}.${ext}"
+  artifactName: "${productName}-Setup-${version}.${ext}"
   deleteAppDataOnUninstall: false
   allowElevation: true
   runAfterFinish: true
 
 publish:
-  provider: generic
-  url: "https://your-update-server.com/releases"
+  provider: github
+  owner: Aphrodine-wq
+  repo: FTW-OS
+  releaseType: release

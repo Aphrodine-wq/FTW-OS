@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell, ipcMain, dialog, session } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import path from 'path'
+import { SQLiteService } from './sqlite'
 import { setupStorageHandlers } from './storage'
 import { setupSystemHandlers } from './system'
 import { setupIntegrationHandlers } from './integrations'
@@ -23,6 +24,13 @@ const PUBLIC_PATH = process.env.PUBLIC || ''
 const DIST_PATH = process.env.DIST || ''
 
 let win: BrowserWindow | null
+
+// Initialize SQLite first, then other handlers
+SQLiteService.init().then(() => {
+  console.log('SQLite database initialized')
+}).catch(err => {
+  console.error('SQLite initialization failed:', err)
+})
 
 // Initialize handlers
 setupStorageHandlers()

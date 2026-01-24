@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { isSupabaseConfigured } from '@/services/supabase'
 type AuthMode = 'login' | 'register' | 'forgot-password'
 
 export function LoginScreen() {
-  const { login, loginWithGoogleOAuth, handleGoogleCallback, loginAsGuest, loginWithEmail, registerWithEmail, resetPassword, checkSession } = useAuthStore()
+  const { loginWithGoogleOAuth, handleGoogleCallback, loginAsGuest, loginWithEmail, registerWithEmail, resetPassword, checkSession } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [isConfigured, setIsConfigured] = useState(true)
   const [authMode, setAuthMode] = useState<AuthMode>('login')

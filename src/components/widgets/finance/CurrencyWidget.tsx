@@ -11,18 +11,25 @@ interface CurrencyRate {
 }
 
 export const CurrencyWidget = React.memo(function CurrencyWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
-  const { data: rates, isLoading } = useQuery<CurrencyRate[]>({
+  const { data: rates, isLoading, error } = useQuery<CurrencyRate[]>({
     queryKey: ['currency-rates'],
     queryFn: async () => {
-      // Using exchangerate-api.com (free, no auth)
-      // For demo, returning mock data
+      // Using free exchangerate.host API (no auth required)
+      const response = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=EUR,GBP,JPY,CAD')
+      if (!response.ok) throw new Error('Failed to fetch rates')
+      const data = await response.json()
+      
+      if (!data.rates) throw new Error('Invalid response')
+      
       return [
-        { from: 'USD', to: 'EUR', rate: 0.92, change: 0.001 },
-        { from: 'USD', to: 'GBP', rate: 0.79, change: -0.002 },
-        { from: 'USD', to: 'JPY', rate: 149.50, change: 0.5 }
+        { from: 'USD', to: 'EUR', rate: data.rates.EUR || 0.92, change: 0 },
+        { from: 'USD', to: 'GBP', rate: data.rates.GBP || 0.79, change: 0 },
+        { from: 'USD', to: 'JPY', rate: data.rates.JPY || 149.5, change: 0 },
+        { from: 'USD', to: 'CAD', rate: data.rates.CAD || 1.36, change: 0 }
       ]
     },
-    refetchInterval: 300000 // 5 minutes
+    refetchInterval: 300000, // 5 minutes
+    retry: 2
   })
 
   return (

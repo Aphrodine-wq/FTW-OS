@@ -28,33 +28,12 @@ export const NewsFeedWidget = React.memo(function NewsFeedWidget() {
   const fetchNews = async () => {
     try {
       setLoading(true)
-      const apiKey = localStorage.getItem('newsapi_key') || 'demo'
+      const apiKey = localStorage.getItem('newsapi_key')
       
-      if (apiKey === 'demo') {
-        // Demo data
-        setArticles([
-          {
-            title: 'AI Breakthrough: New Model Achieves Human-Level Performance',
-            description: 'Researchers announce major advancement in artificial intelligence capabilities.',
-            url: '#',
-            publishedAt: new Date().toISOString(),
-            source: { name: 'Tech News' }
-          },
-          {
-            title: 'Startup Raises $100M for Revolutionary Cloud Platform',
-            description: 'New cloud infrastructure promises 10x performance improvements.',
-            url: '#',
-            publishedAt: new Date(Date.now() - 3600000).toISOString(),
-            source: { name: 'Business Wire' }
-          },
-          {
-            title: 'Open Source Project Reaches 1 Million Stars on GitHub',
-            description: 'Popular developer tool becomes most starred repository.',
-            url: '#',
-            publishedAt: new Date(Date.now() - 7200000).toISOString(),
-            source: { name: 'Dev News' }
-          }
-        ])
+      if (!apiKey) {
+        // No API key configured - show configuration prompt
+        setError('API key required')
+        setArticles([])
         setLoading(false)
         return
       }
@@ -153,9 +132,15 @@ export const NewsFeedWidget = React.memo(function NewsFeedWidget() {
         ))}
 
         {error && (
-          <div className="text-xs text-muted-foreground text-center py-4">
-            <p>{error}</p>
-            <p className="mt-1">Add NewsAPI key in Settings</p>
+          <div className="text-center py-8 px-4">
+            <Newspaper className="h-10 w-10 text-blue-400/50 mx-auto mb-3" />
+            <p className="text-sm font-medium mb-1">News Feed</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              {error === 'API key required' ? 'Configure to see live news' : error}
+            </p>
+            <p className="text-xs text-blue-500 hover:underline cursor-pointer">
+              Settings → Integrations → NewsAPI
+            </p>
           </div>
         )}
 

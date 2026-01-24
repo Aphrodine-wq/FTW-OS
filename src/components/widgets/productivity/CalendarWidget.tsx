@@ -1,46 +1,31 @@
-import React from 'react'
-import { Calendar, Clock } from 'lucide-react'
+import React, { useMemo } from 'react'
+import { Calendar, Clock, Plus } from 'lucide-react'
 import { AppWidget } from '../core/AppWidget'
-import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-
-interface CalendarEvent {
-  id: string
-  title: string
-  time: string
-  date: Date
-}
+import { useCalendarStore } from '@/stores/calendar-store'
 
 export function CalendarWidget({ id, onRemove }: { id?: string; onRemove?: () => void }) {
-  const { data: events, isLoading } = useQuery<CalendarEvent[]>({
-    queryKey: ['calendar-events'],
-    queryFn: async () => {
-      // Integrate with calendar API (Google Calendar, Outlook, etc.)
-      // For demo, returning mock data
-      const now = new Date()
-      return [
-        {
-          id: '1',
-          title: 'Team Meeting',
-          time: '10:00 AM',
-          date: new Date(now.getTime() + 2 * 60 * 60 * 1000)
-        },
-        {
-          id: '2',
-          title: 'Client Call',
-          time: '2:00 PM',
-          date: new Date(now.getTime() + 6 * 60 * 60 * 1000)
-        },
-        {
-          id: '3',
-          title: 'Project Review',
-          time: '4:30 PM',
-          date: new Date(now.getTime() + 8.5 * 60 * 60 * 1000)
-        }
-      ]
-    },
-    refetchInterval: 300000 // 5 minutes
-  })
+  const { events } = useCalendarStore()
+  
+  // Get upcoming events (next 7 days)
+  const upcomingEvents = useMemo(() => {
+    const now = new Date()
+    const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    
+    return events
+      .filter(e => {
+        const eventStart = new Date(e.start)
+        return eventStart >= now && eventStart <= weekFromNow
+      })
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+      .slice(0, 5)
+      .map(e => ({
+        id: e.id,
+        title: e.title,
+        time: format(new Date(e.start), 'h:mm a'),
+        date: new Date(e.start)
+      }))
+  }, [events])
 
   return (
     <AppWidget
@@ -48,17 +33,12 @@ export function CalendarWidget({ id, onRemove }: { id?: string; onRemove?: () =>
       icon={Calendar}
       isConfigured={true}
       onRemove={onRemove || (() => {})}
-      configContent={<div>Configure Calendar</div>}
+      configContent={<div className="text-xs text-muted-foreground">Events are managed in the Calendar module</div>}
       id={id || 'calendar'}
     >
       <div className="space-y-2">
-        {isLoading ? (
-          <div className="space-y-2">
-            <div className="h-16 bg-gray-100 rounded animate-pulse" />
-            <div className="h-16 bg-gray-100 rounded animate-pulse" />
-          </div>
-        ) : events && events.length > 0 ? (
-          events.slice(0, 3).map((event) => (
+        {upcomingEvents.length > 0 ? (
+          upcomingEvents.map((event) => (
             <div key={event.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50">
               <div className="p-2 bg-blue-100 rounded">
                 <Clock className="w-4 h-4 text-blue-600" />
@@ -71,7 +51,11 @@ export function CalendarWidget({ id, onRemove }: { id?: string; onRemove?: () =>
             </div>
           ))
         ) : (
-          <p className="text-sm text-gray-500 text-center py-4">No upcoming events</p>
+          <div className="text-center py-6">
+            <Calendar className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">No upcoming events</p>
+            <p className="text-xs text-gray-400 mt-1">Add events in the Calendar module</p>
+          </div>
         )}
       </div>
     </AppWidget>

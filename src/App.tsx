@@ -5,6 +5,8 @@ import '@/styles/themes.css'
 // Lazy load ErrorBoundary to avoid circular deps
 const ErrorBoundary = lazy(() => import('@/components/ErrorBoundary').then(m => ({ default: m.ErrorBoundary })))
 import { Toaster } from 'sonner'
+import OnboardingContainer from '@/components/onboarding/OnboardingContainer'
+import { useOnboardingStore } from '@/stores/onboarding-store'
 
 // Import extracted modules
 import { ModuleRouter } from '@/lib/module-router'
@@ -208,6 +210,15 @@ const AppInner = ({ storeState }: { storeState: NonNullable<ReturnType<typeof us
 
 // Main App Component - Handles store initialization
 export function App() {
+  // Gate onboarding flow on first run; if onboarding not completed, render the onboarding experience
+  const onboardingCompleted = useOnboardingStore((s) => s.completed)
+  if (!onboardingCompleted) {
+    return (
+      <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-slate-950"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>}>
+        <OnboardingContainer />
+      </Suspense>
+    )
+  }
   const { storesReady, storeError, storeState } = useStoreInitialization()
 
   // Loading state

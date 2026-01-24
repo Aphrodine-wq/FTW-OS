@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Play, Pause, RotateCcw, Coffee } from 'lucide-react'
 import { cn } from '@/services/utils'
@@ -26,11 +26,6 @@ export function PomodoroTimer() {
   }, [isActive, timeLeft])
 
   const toggleTimer = () => setIsActive(!isActive)
-  
-  const resetTimer = () => {
-    setIsActive(false)
-    setTimeLeft(mode === 'work' ? 25 * 60 : 5 * 60)
-  }
 
   const switchMode = () => {
     const newMode = mode === 'work' ? 'break' : 'work'

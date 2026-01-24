@@ -1,4 +1,3 @@
-import React from 'react'
 import { Users, Plus } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 

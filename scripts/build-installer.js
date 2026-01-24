@@ -7,7 +7,7 @@ console.log('[FTW-OS Installer] Starting installer build process...');
 try {
   // Step 1: Build the Vite app
   console.log('[FTW-OS Installer] Step 1: Building Vite app...');
-  execSync('npm exec vite build', { stdio: 'inherit' });
+  execSync('npm exec vite -- build', { stdio: 'inherit' });
 
   // Step 2: Compile TypeScript for Electron
   console.log('[FTW-OS Installer] Step 2: Compiling Electron TypeScript...');
@@ -15,7 +15,7 @@ try {
 
   // Step 3: Build installer with electron-builder
   console.log('[FTW-OS Installer] Step 3: Building Windows installer...');
-  execSync('npm exec electron-builder --win --config electron-builder.json', { stdio: 'inherit' });
+  execSync('npm exec electron-builder -- --win --config electron-builder.json', { stdio: 'inherit' });
 
   // Step 4: Copy setup.exe to root
   console.log('[FTW-OS Installer] Step 4: Copying installer to root...');

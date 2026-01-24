@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useSecureSettings } from '@/stores/secure-settings-store'
-import { Save, CheckCircle2, Cpu, Gamepad2 } from 'lucide-react'
+import { Save, CheckCircle2, Cpu, Gamepad2, Mail } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { OAuthConnections } from './OAuthConnections'
 
@@ -22,7 +22,11 @@ export function SettingsIntegrations() {
     steamId: '',
     openaiApiKey: '',
     anthropicApiKey: '',
-    ollamaEndpoint: 'http://localhost:11434'
+    ollamaEndpoint: 'http://localhost:11434',
+    smtpHost: '',
+    smtpPort: '587',
+    smtpUser: '',
+    smtpPass: ''
   })
 
   useEffect(() => {
@@ -32,15 +36,51 @@ export function SettingsIntegrations() {
         ...integrations
       }))
     }
+    
+    // Load SMTP config from backend
+    const loadSmtpConfig = async () => {
+      try {
+        const settings = await window.ipcRenderer.invoke('db:get-settings')
+        if (settings?.smtpConfig) {
+          setIntegrationData(prev => ({
+            ...prev,
+            smtpHost: settings.smtpConfig.host || '',
+            smtpPort: String(settings.smtpConfig.port || 587),
+            smtpUser: settings.smtpConfig.user || '',
+            smtpPass: settings.smtpConfig.pass || ''
+          }))
+        }
+      } catch (err) {
+        console.error('Failed to load SMTP config:', err)
+      }
+    }
+    loadSmtpConfig()
   }, [integrations])
 
   const handleIntegrationsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     updateIntegrations(integrationData)
+    
+    // Save SMTP config to backend settings (separate from integrations)
+    try {
+      const currentSettings = await window.ipcRenderer.invoke('db:get-settings') || {}
+      await window.ipcRenderer.invoke('db:save-settings', {
+        ...currentSettings,
+        smtpConfig: {
+          host: integrationData.smtpHost,
+          port: parseInt(integrationData.smtpPort) || 587,
+          user: integrationData.smtpUser,
+          pass: integrationData.smtpPass
+        }
+      })
+    } catch (err) {
+      console.error('Failed to save SMTP config:', err)
+    }
+    
     saveSettings()
 
     // Save sensitive keys to vault
-    const sensitiveKeys = ['openaiApiKey', 'anthropicApiKey', 'steamApiKey']
+    const sensitiveKeys = ['openaiApiKey', 'anthropicApiKey', 'steamApiKey', 'smtpPass']
     try {
       for (const key of sensitiveKeys) {
         if (integrationData[key as keyof typeof integrationData]) {
@@ -180,6 +220,60 @@ export function SettingsIntegrations() {
                   placeholder="http://localhost:11434"
                 />
                 <p className="text-xs text-muted-foreground">Default is http://localhost:11434</p>
+              </div>
+            </div>
+
+            {/* SMTP Email */}
+            <div className="p-6 rounded-xl border bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors">
+              <h3 className="font-medium text-lg border-b pb-2 flex items-center gap-2 mb-4">
+                <span className="p-1 rounded bg-blue-500/10 text-blue-600"><Mail className="h-5 w-5" /></span>
+                Email (SMTP)
+              </h3>
+              <p className="text-xs text-muted-foreground mb-4">Configure SMTP to send invoices directly from the app</p>
+              <div className="grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">SMTP Host</label>
+                    <Input
+                      value={integrationData.smtpHost || ''}
+                      onChange={(e) => setIntegrationData(prev => ({ ...prev, smtpHost: e.target.value }))}
+                      className="font-mono text-sm"
+                      placeholder="smtp.gmail.com"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">Port</label>
+                    <Input
+                      value={integrationData.smtpPort || '587'}
+                      onChange={(e) => setIntegrationData(prev => ({ ...prev, smtpPort: e.target.value }))}
+                      className="font-mono text-sm"
+                      placeholder="587"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium flex justify-between">
+                    Email Address
+                    {integrationData.smtpUser && <span className="text-xs text-green-500 font-bold flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Configured</span>}
+                  </label>
+                  <Input
+                    value={integrationData.smtpUser || ''}
+                    onChange={(e) => setIntegrationData(prev => ({ ...prev, smtpUser: e.target.value }))}
+                    className="font-mono text-sm"
+                    placeholder="you@company.com"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Password / App Password</label>
+                  <Input
+                    value={integrationData.smtpPass || ''}
+                    onChange={(e) => setIntegrationData(prev => ({ ...prev, smtpPass: e.target.value }))}
+                    className="font-mono text-sm"
+                    type="password"
+                    placeholder="App-specific password"
+                  />
+                  <p className="text-xs text-muted-foreground">For Gmail, use an App Password from your Google Account security settings</p>
+                </div>
               </div>
             </div>
 

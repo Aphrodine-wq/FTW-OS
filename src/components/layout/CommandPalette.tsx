@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Command } from 'cmdk'
 import { Search } from 'lucide-react'
 import { useCommandPalette } from '@/hooks/useCommandPalette'

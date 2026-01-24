@@ -19,6 +19,8 @@
     "build:react": "vite build",
     "build:electron": "tsc -p electron/tsconfig.json",
     "deploy": "node scripts/release.js",
+    "publish": "tsc -p electron/tsconfig.json && vite build && electron-builder --config .build-config/electron-builder.yml --publish always",
+    "publish:draft": "tsc -p electron/tsconfig.json && vite build && electron-builder --config .build-config/electron-builder.yml --publish onTagOrDraft",
     "preview": "vite preview",
     "analyze": "node scripts/analyze-bundle.js",
     "perf:report": "node scripts/perf-report.js",

@@ -15,8 +15,7 @@ const mocks = vi.hoisted(() => ({
   googleOAuth: {
     login: vi.fn(),
     handleCallback: vi.fn()
-  },
-  injectSeedData: vi.fn(() => Promise.resolve())
+  }
 }))
 
 // Mock logger
@@ -31,7 +30,6 @@ vi.mock('@/lib/logger', () => ({
 // Mock dependencies using hoisted variables
 vi.mock('@/services/supabase', () => ({ supabase: mocks.supabase }))
 vi.mock('@/services/google-oauth', () => ({ googleOAuth: mocks.googleOAuth }))
-vi.mock('@/lib/seed-data', () => ({ injectSeedData: mocks.injectSeedData }))
 
 // Mock window
 const mockWindow = {
@@ -91,17 +89,14 @@ describe('AuthStore', () => {
     expect(state.isAuthenticated).toBe(true)
     expect(state.user?.id).toBe(mockUser.id)
     expect(state.tokens).toEqual(mockTokens)
-    expect(mocks.injectSeedData).toHaveBeenCalled()
   })
 
-  it('should login as guest', () => {
+  it('should reject guest login in production', () => {
     useAuthStore.getState().loginAsGuest()
     
+    // Guest login should NOT authenticate in production
     const state = useAuthStore.getState()
-    expect(state.isAuthenticated).toBe(true)
-    expect(state.user?.role).toBe('admin')
-    expect(state.user?.id).toBe('guest-dev')
-    expect(mocks.injectSeedData).toHaveBeenCalled()
+    expect(state.isAuthenticated).toBe(false)
   })
 
   it('should logout', async () => {

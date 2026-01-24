@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react'
-import { Search, FileText, DollarSign, Briefcase, User, Calendar, X } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { Command } from 'cmdk'
 import { useDebouncedCallback } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -33,7 +33,7 @@ export function GlobalSearch({ onNavigate }: { onNavigate: (path: string) => voi
     const filterRegex = /(\w+):(\w+)/g
     let match
     while ((match = filterRegex.exec(q)) !== null) {
-      filters.push({ key: match[1], value: match[2] })
+      filters.push({ key: match[1] ?? '', value: match[2] ?? '' })
     }
     return filters
   }
@@ -47,27 +47,27 @@ export function GlobalSearch({ onNavigate }: { onNavigate: (path: string) => voi
   const baseQuery = useMemo(() => extractBaseQuery(query), [query])
 
   // Mock search functions - replace with actual search implementations
-  const searchInvoices = (q: string, filters: SearchFilter[]): SearchResult[] => {
+  const searchInvoices = (_q: string, _filters: SearchFilter[]): SearchResult[] => {
     // In production, search actual invoice data
     return []
   }
 
-  const searchTasks = (q: string, filters: SearchFilter[]): SearchResult[] => {
+  const searchTasks = (_q: string, _filters: SearchFilter[]): SearchResult[] => {
     // In production, search actual task data
     return []
   }
 
-  const searchProjects = (q: string, filters: SearchFilter[]): SearchResult[] => {
+  const searchProjects = (_q: string, _filters: SearchFilter[]): SearchResult[] => {
     // In production, search actual project data
     return []
   }
 
-  const searchClients = (q: string, filters: SearchFilter[]): SearchResult[] => {
+  const searchClients = (_q: string, _filters: SearchFilter[]): SearchResult[] => {
     // In production, search actual client data
     return []
   }
 
-  const searchDocuments = (q: string, filters: SearchFilter[]): SearchResult[] => {
+  const searchDocuments = (_q: string, _filters: SearchFilter[]): SearchResult[] => {
     // In production, search actual document data
     return []
   }
