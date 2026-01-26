@@ -53,6 +53,16 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
     <div className="fixed inset-0 bg-white text-gray-900 font-mono flex flex-col items-center justify-center p-8 z-[9999] overflow-hidden">
       {/* Background Matrix Effect (Subtle) */}
       <div className="absolute inset-0 opacity-5 pointer-events-none bg-[linear-gradient(rgba(18,16,14,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(0,0,0,0.03),rgba(0,0,0,0.01),rgba(0,0,0,0.03))] bg-[length:100%_2px,3px_100%] bg-repeat" />
+      
+      {/* Dev Skip Button */}
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          onClick={() => onComplete?.()}
+          className="absolute top-4 right-4 px-3 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded z-50"
+        >
+          Skip
+        </button>
+      )}
 
       <div className="w-full max-w-2xl relative z-10 flex flex-col gap-12">
         {/* Main Logo / Identity */}

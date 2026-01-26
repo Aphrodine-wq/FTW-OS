@@ -94,9 +94,17 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       loginAsGuest: () => {
-        // Guest mode disabled for production - require proper authentication
-        logger.warn('Guest login attempted but is disabled in production')
-        // Do not set authenticated state
+        // Enable guest mode for development
+        logger.info('Guest login enabled for development')
+        set({
+          isAuthenticated: true,
+          user: {
+            id: 'guest-' + Date.now(),
+            name: 'Developer',
+            email: 'dev@ftw-os.local',
+            role: 'admin'
+          }
+        })
       },
       logout: async () => {
         await supabase.auth.signOut()

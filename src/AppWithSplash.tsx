@@ -9,26 +9,18 @@ const MainApp = React.lazy(() => import('./App').then(m => ({ default: m.App }))
 export const AppWithSplash: React.FC = () => {
   // Initialize state based on session storage to prevent double boot
   const hasBooted = !!sessionStorage.getItem('hasBooted')
-  const [phase, setPhase] = useState<'splash' | 'gate' | 'app'>(hasBooted ? 'app' : 'splash')
-  const [progress, setProgress] = useState(0)
+  const [phase, setPhase] = useState<'splash' | 'gate' | 'app'>(hasBooted ? 'gate' : 'splash')
 
   useEffect(() => {
     if (hasBooted) return;
 
-    // Splash Loading Sequence
-    let currentProgress = 0
-    const interval = setInterval(() => {
-      currentProgress += 2
-      setProgress(currentProgress)
-
-      if (currentProgress >= 100) {
-        clearInterval(interval)
-        setTimeout(() => setPhase('gate'), 800) // Wait for splash exit animation
-      }
-    }, 40) // Slightly slower for cinematic feel
-
-    return () => clearInterval(interval)
+    // SplashScreen component handles its own completion callback
+    // We don't need external progress management
   }, [hasBooted])
+
+  const handleSplashComplete = () => {
+    setPhase('gate')
+  }
 
   const handleEnter = () => {
     sessionStorage.setItem('hasBooted', 'true')
@@ -38,9 +30,7 @@ export const AppWithSplash: React.FC = () => {
   return (
     <>
       {phase === 'splash' && (
-        <SplashScreen
-          progress={progress}
-        />
+        <SplashScreen onComplete={handleSplashComplete} />
       )}
       
       {phase === 'gate' && (

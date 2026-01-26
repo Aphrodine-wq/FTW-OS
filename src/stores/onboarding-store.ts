@@ -1,4 +1,5 @@
 import create from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export type WorkspaceInfo = {
   name: string
@@ -36,18 +37,25 @@ export const useOnboardingStore = create<OnboardingState & {
   selectTemplate: (id: string) => void
   complete: () => void
   skip: () => void
-}>((set, get) => ({
-  completed: false,
-  started: false,
-  workspace: undefined,
-  user: undefined,
-  preferences: { theme: 'system', telemetry: true },
-  templateId: undefined,
-  start: () => set({ started: true }),
-  setWorkspace: (w) => set({ workspace: w }),
-  setUser: (u) => set({ user: u }),
-  setPreferences: (p) => set({ preferences: p }),
-  selectTemplate: (id) => set({ templateId: id }),
-  complete: () => set({ completed: true }),
-  skip: () => set({ completed: true }),
-}))
+}>(
+  persist(
+    (set, get) => ({
+      completed: false,
+      started: false,
+      workspace: undefined,
+      user: undefined,
+      preferences: { theme: 'system', telemetry: true },
+      templateId: undefined,
+      start: () => set({ started: true }),
+      setWorkspace: (w) => set({ workspace: w }),
+      setUser: (u) => set({ user: u }),
+      setPreferences: (p) => set({ preferences: p }),
+      selectTemplate: (id) => set({ templateId: id }),
+      complete: () => set({ completed: true }),
+      skip: () => set({ completed: true }),
+    }),
+    {
+      name: 'onboarding-storage',
+    }
+  )
+)
